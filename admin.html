@@ -464,8 +464,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <div class="toast-admin" id="toast-admin"></div>
 
 <script>
-const SUPABASE_URL = window.ENV_SUPABASE_URL;
-const SUPABASE_KEY = window.ENV_SUPABASE_KEY;
+const SUPABASE_URL = window.ENV.SUPABASE_URL;
+const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Contraseña admin simple — se cambia desde el panel o en Supabase
