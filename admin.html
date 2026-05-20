@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Prode Mundial 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --navy: #0D1B2A; --navy2: #1B2D42; --gold: #F5C842; --gold2: #E0A800;
+  --cream: #F9F4E8; --cream2: #EDE8D4; --red: #C1292E; --green: #2D6A4F;
+  --text: #0D1B2A; --text2: #4A5568; --text3: #8A95A3;
+  --border: rgba(13,27,42,0.12); --radius: 12px; --radius-sm: 8px;
+  --white: #fff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
+
+.admin-layout { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar {
+  width: 240px; background: var(--navy); display: flex; flex-direction: column;
+  padding: 0; flex-shrink: 0; position: fixed; height: 100vh; overflow-y: auto;
+}
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo-title { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--gold); letter-spacing: 1px; }
+.sidebar-logo-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+.sidebar-badge { display: inline-block; font-size: 10px; background: var(--gold); color: var(--navy); padding: 2px 8px; border-radius: 10px; font-weight: 700; margin-top: 6px; }
+.sidebar-nav { padding: 16px 0; flex: 1; }
+.sidebar-section { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 1.2px; text-transform: uppercase; font-weight: 700; padding: 16px 20px 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+  color: rgba(255,255,255,0.55); font-size: 14px; cursor: pointer;
+  transition: all 0.15s; border: none; background: none; width: 100%;
+  font-family: 'DM Sans', sans-serif; text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: white; }
+.nav-item.active { background: rgba(245,200,66,0.12); color: var(--gold); }
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* Main */
+.main-content { margin-left: 240px; flex: 1; padding: 32px; }
+.page-header { margin-bottom: 28px; }
+.page-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--navy); letter-spacing: 1px; }
+.page-sub { font-size: 14px; color: var(--text2); margin-top: 4px; }
+
+/* Cards */
+.card {
+  background: white; border-radius: var(--radius); border: 1px solid var(--border);
+  padding: 20px; margin-bottom: 20px;
+  box-shadow: 0 1px 6px rgba(13,27,42,0.05);
+}
+.card-title { font-size: 14px; font-weight: 700; color: var(--navy); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-title svg { width: 18px; height: 18px; color: var(--gold2); }
+
+/* Stats row */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: white; border-radius: var(--radius); border: 1px solid var(--border);
+  padding: 20px; text-align: center; box-shadow: 0 1px 6px rgba(13,27,42,0.05);
+}
+.stat-num { font-size: 32px; font-weight: 700; color: var(--navy); }
+.stat-label { font-size: 12px; color: var(--text3); margin-top: 4px; font-weight: 500; }
+.stat-trend { font-size: 11px; margin-top: 6px; }
+
+/* Table */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 0.8px;
+  text-transform: uppercase; padding: 10px 12px; text-align: left;
+  border-bottom: 1px solid var(--border); background: var(--cream);
+}
+.data-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(245,200,66,0.04); }
+
+/* Badges */
+.badge {
+  display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: 0.3px;
+}
+.badge-green { background: #D4EDDA; color: #1A5C30; }
+.badge-amber { background: #FFF3CD; color: #856404; }
+.badge-red { background: #FDDEDE; color: #8B1A1A; }
+.badge-blue { background: #D0E8FF; color: #0A4A8C; }
+.badge-gray { background: var(--cream2); color: var(--text3); }
+
+/* Forms */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.form-row.single { grid-template-columns: 1fr; }
+.form-group label { font-size: 12px; font-weight: 700; color: var(--text2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 14px; font-family: 'DM Sans', sans-serif;
+  color: var(--navy); background: white; outline: none; transition: border 0.15s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--navy); }
+
+/* Buttons */
+.btn {
+  padding: 10px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif; border: none; transition: opacity 0.15s;
+}
+.btn:active { opacity: 0.8; }
+.btn-navy { background: var(--navy); color: var(--gold); }
+.btn-gold { background: var(--gold); color: var(--navy); }
+.btn-danger { background: var(--red); color: white; }
+.btn-outline { background: none; border: 1.5px solid var(--border); color: var(--text2); }
+
+/* Score inputs in table */
+.score-pair { display: flex; align-items: center; gap: 6px; }
+.score-box {
+  width: 40px; height: 36px; border: 1.5px solid var(--border); border-radius: 6px;
+  text-align: center; font-size: 16px; font-weight: 700; color: var(--navy);
+  font-family: 'DM Sans', sans-serif; outline: none; -moz-appearance: textfield;
+}
+.score-box::-webkit-inner-spin-button, .score-box::-webkit-outer-spin-button { -webkit-appearance: none; }
+.score-box:focus { border-color: var(--navy); }
+
+/* Upload area */
+.upload-area {
+  border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px;
+  text-align: center; cursor: pointer; transition: all 0.15s; background: var(--cream);
+}
+.upload-area:hover { border-color: var(--gold2); background: #FFFBE6; }
+.upload-area img { max-width: 100%; border-radius: var(--radius-sm); max-height: 120px; object-fit: cover; }
+
+/* Login overlay */
+.admin-login {
+  position: fixed; inset: 0; background: var(--navy);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999;
+}
+.admin-login-box {
+  background: var(--navy2); border-radius: var(--radius); padding: 32px;
+  width: 360px; border: 1px solid rgba(255,255,255,0.08);
+}
+.admin-login-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); margin-bottom: 24px; }
+.admin-login-input {
+  width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.07);
+  color: white; font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none;
+  margin-bottom: 12px;
+}
+.admin-login-input::placeholder { color: rgba(255,255,255,0.3); }
+.admin-login-btn {
+  width: 100%; padding: 13px; border: none; border-radius: var(--radius-sm);
+  background: var(--gold); color: var(--navy); font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+}
+
+/* Toast */
+.toast-admin {
+  position: fixed; bottom: 24px; right: 24px; background: var(--navy); color: white;
+  padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 500;
+  opacity: 0; transition: opacity 0.2s; pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 200;
+}
+.toast-admin.show { opacity: 1; }
+
+/* Responsive tabs */
+.section-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
+.section-tab {
+  padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: 1.5px solid var(--border); background: white;
+  color: var(--text2); transition: all 0.15s;
+}
+.section-tab.active { background: var(--navy); color: var(--gold); border-color: var(--navy); }
+
+.panel { display: none; }
+.panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN ADMIN -->
+<div class="admin-login" id="admin-login">
+  <div class="admin-login-box">
+    <div class="admin-login-title">🏆 Admin Panel</div>
+    <p style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:20px;">Acceso exclusivo para administradores</p>
+    <input type="password" class="admin-login-input" id="admin-pwd" placeholder="Contraseña de admin" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    <button class="admin-login-btn" onclick="doAdminLogin()">Entrar al panel →</button>
+  </div>
+</div>
+
+<div class="admin-layout" id="admin-app" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-title">Prode Mundial</div>
+      <div class="sidebar-logo-sub">Panel de Administración</div>
+      <div class="sidebar-badge">ADMIN</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">General</div>
+      <button class="nav-item active" onclick="showPanel('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <div class="sidebar-section">Partidos</div>
+      <button class="nav-item" onclick="showPanel('resultados')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Cargar resultados
+      </button>
+      <button class="nav-item" onclick="showPanel('partidos')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Gestionar partidos
+      </button>
+      <div class="sidebar-section">Usuarios</div>
+      <button class="nav-item" onclick="showPanel('usuarios')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+        Usuarios
+      </button>
+      <button class="nav-item" onclick="showPanel('grupos')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Grupos
+      </button>
+      <div class="sidebar-section">Apariencia</div>
+      <button class="nav-item" onclick="showPanel('banners')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Banners e imágenes
+      </button>
+      <button class="nav-item" onclick="showPanel('config')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Configuración
+      </button>
+    </nav>
+  </div>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- DASHBOARD -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Resumen general del prode · actualizado hace 2 min</div>
+      </div>
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-num" id="stat-usuarios">—</div><div class="stat-label">Usuarios</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-grupos">—</div><div class="stat-label">Grupos</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-pronos">—</div><div class="stat-label">Pronósticos</div></div>
+        <div class="stat-card"><div class="stat-num" id="stat-partidos-cargados">—</div><div class="stat-label">Partidos cargados</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+          Próximos partidos (próximas 48h)
+        </div>
+        <div id="proximos-partidos-list">Cargando...</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Últimos usuarios registrados
+        </div>
+        <div id="ultimos-usuarios">Cargando...</div>
+      </div>
+    </div>
+
+    <!-- RESULTADOS -->
+    <div class="panel" id="panel-resultados">
+      <div class="page-header">
+        <div class="page-title">Cargar Resultados</div>
+        <div class="page-sub">Ingresá el marcador final de cada partido. Los puntos se calculan automáticamente.</div>
+      </div>
+
+      <div class="section-tabs" id="etapa-tabs-admin"></div>
+      <div id="resultados-partidos-list"></div>
+    </div>
+
+    <!-- PARTIDOS -->
+    <div class="panel" id="panel-partidos">
+      <div class="page-header">
+        <div class="page-title">Gestionar Partidos</div>
+        <div class="page-sub">Actualizá equipos para etapas eliminatorias cuando se definan los clasificados.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Partidos eliminatorios — actualizar equipos</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Los partidos de octavos, cuartos, semis y final se actualizan aquí cuando se conocen los clasificados.</p>
+        <div id="partidos-elim-list">
+          <p style="color:var(--text3);font-size:14px;">Seleccioná la etapa para editar.</p>
+        </div>
+        <div style="margin-top:16px;">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Partido</label>
+              <select id="edit-partido-select" onchange="loadPartidoEdit()"></select>
+            </div>
+          </div>
+          <div class="form-row" id="edit-partido-form" style="display:none;">
+            <div class="form-group">
+              <label>Equipo local (bandera + nombre)</label>
+              <input type="text" id="edit-local-bandera" placeholder="🇦🇷" style="width:60px;display:inline-block;margin-right:8px;">
+              <input type="text" id="edit-local-nombre" placeholder="Argentina" style="width:calc(100% - 76px);display:inline-block;">
+            </div>
+            <div class="form-group">
+              <label>Equipo visitante (bandera + nombre)</label>
+              <input type="text" id="edit-visit-bandera" placeholder="🇧🇷" style="width:60px;display:inline-block;margin-right:8px;">
+              <input type="text" id="edit-visit-nombre" placeholder="Brasil" style="width:calc(100% - 76px);display:inline-block;">
+            </div>
+          </div>
+          <button class="btn btn-navy" onclick="guardarPartidoEdit()">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div class="panel" id="panel-usuarios">
+      <div class="page-header">
+        <div class="page-title">Usuarios</div>
+        <div class="page-sub">Todos los participantes registrados</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Lista de usuarios</div>
+        <table class="data-table" id="usuarios-table">
+          <thead><tr>
+            <th>Avatar</th><th>Nombre</th><th>Grupos</th><th>Pronósticos</th><th>Acciones</th>
+          </tr></thead>
+          <tbody id="usuarios-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GRUPOS -->
+    <div class="panel" id="panel-grupos">
+      <div class="page-header">
+        <div class="page-title">Grupos de juego</div>
+        <div class="page-sub">Administrá los grupos del prode</div>
+      </div>
+      <div id="grupos-admin-list"></div>
+    </div>
+
+    <!-- BANNERS -->
+    <div class="panel" id="panel-banners">
+      <div class="page-header">
+        <div class="page-title">Banners e imágenes</div>
+        <div class="page-sub">Subí banners publicitarios o decorativos que aparecen en la app</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title">Banner principal (pantalla pronósticos)</div>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Aparece arriba de la lista de partidos. Tamaño ideal: 800×200px</p>
+          <div class="upload-area" id="banner-main-preview" onclick="document.getElementById('banner-main-input').click()">
+            <div style="font-size:32px;margin-bottom:8px;">🖼</div>
+            <p style="font-size:13px;color:var(--text3);">Hacé clic para subir imagen</p>
+            <p style="font-size:11px;color:var(--text3);margin-top:4px;">JPG, PNG · máx 2MB</p>
+          </div>
+          <input type="file" id="banner-main-input" accept="image/*" style="display:none;" onchange="previewBanner('banner-main', this)">
+          <div class="form-group" style="margin-top:12px;">
+            <label>O pegá una URL de imagen</label>
+            <input type="text" id="banner-main-url" placeholder="https://...">
+          </div>
+          <div class="form-group" style="margin-top:8px;">
+            <label>Asignar a grupo (opcional — vacío = todos)</label>
+            <select id="banner-main-grupo">
+              <option value="">Todos los grupos</option>
+            </select>
+          </div>
+          <button class="btn btn-navy" style="margin-top:12px;width:100%;" onclick="saveBanner('main')">Guardar banner</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Banner secundario (pantalla tabla)</div>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Aparece en la sección de clasificación. Tamaño ideal: 800×120px</p>
+          <div class="upload-area" id="banner-tabla-preview" onclick="document.getElementById('banner-tabla-input').click()">
+            <div style="font-size:32px;margin-bottom:8px;">🖼</div>
+            <p style="font-size:13px;color:var(--text3);">Hacé clic para subir imagen</p>
+            <p style="font-size:11px;color:var(--text3);margin-top:4px;">JPG, PNG · máx 2MB</p>
+          </div>
+          <input type="file" id="banner-tabla-input" accept="image/*" style="display:none;" onchange="previewBanner('banner-tabla', this)">
+          <div class="form-group" style="margin-top:12px;">
+            <label>O pegá una URL de imagen</label>
+            <input type="text" id="banner-tabla-url" placeholder="https://...">
+          </div>
+          <button class="btn btn-navy" style="margin-top:12px;width:100%;" onclick="saveBanner('tabla')">Guardar banner</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Banners activos</div>
+        <div id="banners-list">
+          <p style="color:var(--text3);font-size:14px;">No hay banners activos.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="panel" id="panel-config">
+      <div class="page-header">
+        <div class="page-title">Configuración</div>
+        <div class="page-sub">Ajustes generales del prode</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sistema de puntos</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Puntos por resultado exacto (fase grupos)</label>
+            <input type="number" id="cfg-exacto" value="3" min="1" max="10">
+          </div>
+          <div class="form-group">
+            <label>Puntos por resultado correcto (fase grupos)</label>
+            <input type="number" id="cfg-resultado" value="1" min="1" max="10">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Multiplicador octavos</label>
+            <input type="number" id="cfg-mult-oct" value="2" min="1" max="5">
+          </div>
+          <div class="form-group">
+            <label>Multiplicador cuartos</label>
+            <input type="number" id="cfg-mult-qrt" value="2" min="1" max="5">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Multiplicador semifinal</label>
+            <input type="number" id="cfg-mult-semi" value="3" min="1" max="5">
+          </div>
+          <div class="form-group">
+            <label>Multiplicador final</label>
+            <input type="number" id="cfg-mult-final" value="4" min="1" max="10">
+          </div>
+        </div>
+        <button class="btn btn-navy" onclick="saveConfig()">Guardar configuración</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Contraseña de admin</div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>Nueva contraseña</label>
+            <input type="password" id="new-admin-pwd" placeholder="Mínimo 6 caracteres">
+          </div>
+        </div>
+        <button class="btn btn-navy" onclick="changeAdminPwd()">Cambiar contraseña</button>
+      </div>
+
+      <div class="card" style="border-color:rgba(193,41,46,0.2);">
+        <div class="card-title">Zona peligrosa</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Estas acciones no se pueden deshacer.</p>
+        <div style="display:flex;gap:12px;">
+          <button class="btn btn-danger" onclick="if(confirm('¿Resetear TODOS los pronósticos?')) resetPronos()">Resetear pronósticos</button>
+          <button class="btn btn-outline" onclick="if(confirm('¿Resetear TODOS los resultados?')) resetResultados()">Resetear resultados</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast-admin" id="toast-admin"></div>
+
+<script>
+const SUPABASE_URL = 'TU_SUPABASE_URL';
+const SUPABASE_KEY = 'TU_SUPABASE_ANON_KEY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Contraseña admin simple — se cambia desde el panel o en Supabase
+const ADMIN_PWD_KEY = 'prode_admin_pwd';
+const DEFAULT_PWD = 'admin2026';
+
+const ETAPAS = [
+  { id:'grupos', label:'Fase de Grupos' }, { id:'octavos', label:'Octavos' },
+  { id:'cuartos', label:'Cuartos' }, { id:'semifinal', label:'Semifinal' },
+  { id:'tercero', label:'3er Puesto' }, { id:'final', label:'Final' },
+];
+
+const PARTIDOS = [
+  { id:'g1', etapa:'grupos', local:'🇲🇽', local_nombre:'México', visit:'🇨🇦', visit_nombre:'Canadá', fecha:'2026-06-11', hora:'18:00' },
+  { id:'g2', etapa:'grupos', local:'🇺🇸', local_nombre:'EE.UU.', visit:'🇷🇸', visit_nombre:'Serbia', fecha:'2026-06-11', hora:'21:00' },
+  { id:'g3', etapa:'grupos', local:'🇦🇷', local_nombre:'Argentina', visit:'🇳🇬', visit_nombre:'Nigeria', fecha:'2026-06-12', hora:'15:00' },
+  { id:'g4', etapa:'grupos', local:'🇧🇷', local_nombre:'Brasil', visit:'🇩🇪', visit_nombre:'Alemania', fecha:'2026-06-12', hora:'18:00' },
+  { id:'g5', etapa:'grupos', local:'🇫🇷', local_nombre:'Francia', visit:'🇲🇦', visit_nombre:'Marruecos', fecha:'2026-06-13', hora:'15:00' },
+  { id:'g6', etapa:'grupos', local:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', local_nombre:'Inglaterra', visit:'🇵🇹', visit_nombre:'Portugal', fecha:'2026-06-13', hora:'18:00' },
+  { id:'g7', etapa:'grupos', local:'🇪🇸', local_nombre:'España', visit:'🇯🇵', visit_nombre:'Japón', fecha:'2026-06-14', hora:'15:00' },
+  { id:'g8', etapa:'grupos', local:'🇳🇱', local_nombre:'Países Bajos', visit:'🇸🇳', visit_nombre:'Senegal', fecha:'2026-06-14', hora:'18:00' },
+  { id:'o1', etapa:'octavos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-01', hora:'15:00' },
+  { id:'o2', etapa:'octavos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-01', hora:'19:00' },
+  { id:'o3', etapa:'octavos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-02', hora:'15:00' },
+  { id:'o4', etapa:'octavos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-02', hora:'19:00' },
+  { id:'q1', etapa:'cuartos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-08', hora:'19:00' },
+  { id:'q2', etapa:'cuartos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-09', hora:'19:00' },
+  { id:'s1', etapa:'semifinal', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-14', hora:'19:00' },
+  { id:'s2', etapa:'semifinal', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-15', hora:'19:00' },
+  { id:'t1', etapa:'tercero', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-18', hora:'15:00' },
+  { id:'f1', etapa:'final', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-19', hora:'19:00' },
+];
+
+function toast(msg, ms=2500) {
+  const t = document.getElementById('toast-admin');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
+}
+
+function doAdminLogin() {
+  const pwd = document.getElementById('admin-pwd').value;
+  const stored = localStorage.getItem(ADMIN_PWD_KEY) || DEFAULT_PWD;
+  if (pwd === stored) {
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'flex';
+    loadDashboard();
+    buildEtapaTabsAdmin();
+    loadResultadosPartidos('grupos');
+    populatePartidoSelect();
+  } else {
+    toast('❌ Contraseña incorrecta');
+  }
+}
+
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id==='dashboard') loadDashboard();
+  if (id==='usuarios') loadUsuarios();
+  if (id==='grupos') loadGruposAdmin();
+  if (id==='banners') loadBannersAdmin();
+}
+
+// ─── DASHBOARD ───
+async function loadDashboard() {
+  const { count: cu } = await sb.from('usuarios').select('*',{count:'exact',head:true});
+  const { count: cg } = await sb.from('grupos').select('*',{count:'exact',head:true});
+  const { count: cp } = await sb.from('pronosticos').select('*',{count:'exact',head:true});
+  const { count: cr } = await sb.from('resultados').select('*',{count:'exact',head:true});
+
+  document.getElementById('stat-usuarios').textContent = cu||0;
+  document.getElementById('stat-grupos').textContent = cg||0;
+  document.getElementById('stat-pronos').textContent = cp||0;
+  document.getElementById('stat-partidos-cargados').textContent = cr||0;
+
+  // Próximos partidos
+  const now = new Date();
+  const proximos = PARTIDOS.filter(p => {
+    const [y,m,d] = p.fecha.split('-').map(Number);
+    const [h,min] = p.hora.split(':').map(Number);
+    const dt = new Date(y,m-1,d,h,min);
+    return dt > now;
+  }).slice(0,5);
+
+  const ppList = document.getElementById('proximos-partidos-list');
+  if (proximos.length===0) { ppList.innerHTML = '<p style="color:var(--text3);font-size:14px;">No hay partidos próximos.</p>'; return; }
+  ppList.innerHTML = `<table class="data-table"><thead><tr><th>Partido</th><th>Fecha ARG</th><th>Estado</th></tr></thead><tbody>
+    ${proximos.map(p => `<tr>
+      <td>${p.local} ${p.local_nombre} vs ${p.visit} ${p.visit_nombre}</td>
+      <td>${formatFecha(p.fecha, p.hora)}</td>
+      <td><span class="badge badge-amber">Por jugar</span></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+
+  // Últimos usuarios
+  const { data: users } = await sb.from('usuarios').select('*').order('created_at',{ascending:false}).limit(5);
+  const uuList = document.getElementById('ultimos-usuarios');
+  if (!users||users.length===0) { uuList.innerHTML='<p style="color:var(--text3);font-size:14px;">Sin usuarios.</p>'; return; }
+  uuList.innerHTML = `<table class="data-table"><thead><tr><th>Usuario</th><th>Avatar</th><th>Registrado</th></tr></thead><tbody>
+    ${users.map(u=>`<tr><td><strong>${u.nombre}</strong></td><td>${u.emoji||'📷'}</td><td style="color:var(--text3);font-size:12px;">${new Date(u.created_at).toLocaleDateString('es-AR')}</td></tr>`).join('')}
+  </tbody></table>`;
+}
+
+function formatFecha(fechaStr, hora) {
+  const [y,m,d] = fechaStr.split('-').map(Number);
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return `${d} ${meses[m-1]} · ${hora}`;
+}
+
+// ─── RESULTADOS ───
+function buildEtapaTabsAdmin() {
+  const cont = document.getElementById('etapa-tabs-admin');
+  cont.innerHTML = '';
+  ETAPAS.forEach((e,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'section-tab'+(i===0?' active':'');
+    btn.textContent = e.label;
+    btn.onclick = () => {
+      document.querySelectorAll('#etapa-tabs-admin .section-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      loadResultadosPartidos(e.id);
+    };
+    cont.appendChild(btn);
+  });
+}
+
+async function loadResultadosPartidos(etapa) {
+  const cont = document.getElementById('resultados-partidos-list');
+  const { data: resultados } = await sb.from('resultados').select('*');
+  const resMap = {};
+  (resultados||[]).forEach(r => { resMap[r.partido_id] = r; });
+
+  const partidos = PARTIDOS.filter(p=>p.etapa===etapa);
+  cont.innerHTML = '';
+
+  partidos.forEach(p => {
+    const r = resMap[p.id];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.marginBottom = '12px';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--navy);">${p.local} ${p.local_nombre} vs ${p.visit} ${p.visit_nombre}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px;">${formatFecha(p.fecha, p.hora)} · ARG</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          ${r ? `<span class="badge badge-green">✓ Cargado: ${r.goles_local}-${r.goles_visit}</span>` : '<span class="badge badge-gray">Sin resultado</span>'}
+          <div class="score-pair">
+            <input type="number" class="score-box" id="res-l-${p.id}" value="${r?r.goles_local:''}" min="0" max="20" placeholder="0">
+            <span style="font-size:16px;color:var(--text3);font-weight:700;">-</span>
+            <input type="number" class="score-box" id="res-r-${p.id}" value="${r?r.goles_visit:''}" min="0" max="20" placeholder="0">
+          </div>
+          <button class="btn btn-gold" onclick="guardarResultado('${p.id}')">Guardar</button>
+        </div>
+      </div>`;
+    cont.appendChild(card);
+  });
+}
+
+async function guardarResultado(partidoId) {
+  const l = document.getElementById('res-l-'+partidoId).value;
+  const r = document.getElementById('res-r-'+partidoId).value;
+  if (l===''||r==='') return toast('Ingresá los dos marcadores');
+
+  const gLocal = parseInt(l), gVisit = parseInt(r);
+
+  const { error } = await sb.from('resultados').upsert({
+    partido_id: partidoId, goles_local: gLocal, goles_visit: gVisit
+  }, { onConflict: 'partido_id' });
+
+  if (error) return toast('Error: '+error.message);
+
+  // Recalcular puntos para TODOS los pronósticos de este partido
+  await recalcPuntos(partidoId, gLocal, gVisit);
+  toast('✅ Resultado guardado y puntos actualizados');
+  loadResultadosPartidos(document.querySelector('#etapa-tabs-admin .section-tab.active').textContent === 'Fase de Grupos' ? 'grupos' :
+    document.querySelector('#etapa-tabs-admin .section-tab.active').textContent.toLowerCase().replace(' ',''));
+}
+
+async function recalcPuntos(partidoId, gLocal, gVisit) {
+  const partido = PARTIDOS.find(p=>p.id===partidoId);
+  const mult = partido ? (partido.etapa==='final'?4:partido.etapa==='semifinal'?3:partido.etapa==='grupos'?1:2) : 1;
+
+  const { data: pronos } = await sb.from('pronosticos').select('*').eq('partido_id', partidoId);
+  if (!pronos) return;
+
+  for (const prono of pronos) {
+    let pts = 0;
+    if (prono.goles_local===gLocal && prono.goles_visit===gVisit) pts = 3*mult;
+    else if (Math.sign(prono.goles_local-prono.goles_visit)===Math.sign(gLocal-gVisit)) pts = 1*mult;
+    await sb.from('pronosticos').update({ puntos: pts }).eq('id', prono.id);
+  }
+}
+
+// ─── USUARIOS ───
+async function loadUsuarios() {
+  const { data: users } = await sb.from('usuarios').select('*').order('created_at',{ascending:false});
+  const tbody = document.getElementById('usuarios-tbody');
+  if (!users||users.length===0) { tbody.innerHTML='<tr><td colspan="5" style="color:var(--text3)">Sin usuarios</td></tr>'; return; }
+
+  tbody.innerHTML = users.map(u => `<tr>
+    <td style="font-size:24px;">${u.foto_url?`<img src="${u.foto_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`:u.emoji||'⚽'}</td>
+    <td><strong>${u.nombre}</strong></td>
+    <td>—</td>
+    <td>—</td>
+    <td><button class="btn btn-outline" style="font-size:12px;padding:6px 10px;" onclick="banUser('${u.id}','${u.nombre}')">Suspender</button></td>
+  </tr>`).join('');
+}
+
+async function banUser(id, nombre) {
+  if (!confirm(`¿Suspender a ${nombre}?`)) return;
+  await sb.from('usuarios').update({ suspendido: true }).eq('id', id);
+  toast('✓ Usuario suspendido'); loadUsuarios();
+}
+
+// ─── GRUPOS ADMIN ───
+async function loadGruposAdmin() {
+  const { data: grupos } = await sb.from('grupos').select('*').order('created_at',{ascending:false});
+  const cont = document.getElementById('grupos-admin-list');
+  if (!grupos||grupos.length===0) { cont.innerHTML='<div class="card"><p style="color:var(--text3)">Sin grupos</p></div>'; return; }
+  cont.innerHTML = '';
+  for (const g of grupos) {
+    const { count } = await sb.from('grupo_miembros').select('*',{count:'exact',head:true}).eq('grupo_id',g.id);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.marginBottom = '12px';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="font-size:28px;">${g.emoji||'🏆'}</div>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--navy);">${g.nombre}</div>
+            <div style="font-size:12px;color:var(--text3);">Código: <strong>${g.codigo}</strong> · ${count} miembros</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline" style="font-size:12px;" onclick="toggleBannerGrupo('${g.id}')">Banner</button>
+          <button class="btn btn-danger" style="font-size:12px;" onclick="deleteGrupo('${g.id}','${g.nombre}')">Eliminar</button>
+        </div>
+      </div>`;
+    cont.appendChild(card);
+  }
+}
+
+async function deleteGrupo(id, nombre) {
+  if (!confirm(`¿Eliminar el grupo "${nombre}"? Esto eliminará todos sus pronósticos.`)) return;
+  await sb.from('grupo_miembros').delete().eq('grupo_id',id);
+  await sb.from('pronosticos').delete().eq('grupo_id',id);
+  await sb.from('grupos').delete().eq('id',id);
+  toast('Grupo eliminado'); loadGruposAdmin();
+}
+
+// ─── BANNERS ───
+function previewBanner(prefix, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const area = document.getElementById(prefix+'-preview');
+    area.innerHTML = `<img src="${ev.target.result}" alt="Preview">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function saveBanner(type) {
+  const urlInput = document.getElementById('banner-'+type+'-url').value.trim();
+  const fileInput = document.getElementById('banner-'+type+'-input').files[0];
+  let finalUrl = urlInput;
+
+  if (fileInput && !urlInput) {
+    const ext = fileInput.name.split('.').pop();
+    const path = `banners/banner-${type}-${Date.now()}.${ext}`;
+    const { error } = await sb.storage.from('prode').upload(path, fileInput, {upsert:true});
+    if (!error) {
+      const { data } = sb.storage.from('prode').getPublicUrl(path);
+      finalUrl = data.publicUrl;
+    }
+  }
+
+  if (!finalUrl) return toast('Subí una imagen o pegá una URL');
+
+  const grupoId = type==='main' ? (document.getElementById('banner-main-grupo')?.value||null) : null;
+
+  await sb.from('banners').upsert({ tipo: type, url: finalUrl, grupo_id: grupoId||null }, {onConflict:'tipo'});
+  toast('✅ Banner guardado');
+
+  if (grupoId) {
+    await sb.from('grupos').update({ banner_url: finalUrl }).eq('id', grupoId);
+  }
+}
+
+async function loadBannersAdmin() {
+  const { data: banners } = await sb.from('banners').select('*');
+  const cont = document.getElementById('banners-list');
+  if (!banners||banners.length===0) return;
+  cont.innerHTML = banners.map(b=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+      <img src="${b.url}" style="width:120px;height:50px;object-fit:cover;border-radius:6px;">
+      <div style="flex:1;font-size:13px;color:var(--text2);">Tipo: <strong>${b.tipo}</strong></div>
+      <button class="btn btn-danger" style="font-size:12px;" onclick="deleteBanner('${b.id}')">Eliminar</button>
+    </div>`).join('');
+}
+
+async function deleteBanner(id) {
+  await sb.from('banners').delete().eq('id',id);
+  toast('Banner eliminado'); loadBannersAdmin();
+}
+
+// ─── PARTIDOS EDIT ───
+function populatePartidoSelect() {
+  const sel = document.getElementById('edit-partido-select');
+  const elim = PARTIDOS.filter(p=>p.etapa!=='grupos');
+  sel.innerHTML = '<option value="">— Seleccioná un partido —</option>' +
+    elim.map(p=>`<option value="${p.id}">${p.etapa.toUpperCase()} · ${p.local_nombre} vs ${p.visit_nombre}</option>`).join('');
+}
+
+function loadPartidoEdit() {
+  const pid = document.getElementById('edit-partido-select').value;
+  const form = document.getElementById('edit-partido-form');
+  if (!pid) { form.style.display='none'; return; }
+  const p = PARTIDOS.find(pt=>pt.id===pid);
+  if (!p) return;
+  form.style.display='grid';
+  document.getElementById('edit-local-bandera').value = p.local;
+  document.getElementById('edit-local-nombre').value = p.local_nombre;
+  document.getElementById('edit-visit-bandera').value = p.visit;
+  document.getElementById('edit-visit-nombre').value = p.visit_nombre;
+}
+
+async function guardarPartidoEdit() {
+  const pid = document.getElementById('edit-partido-select').value;
+  if (!pid) return toast('Seleccioná un partido');
+  const local = document.getElementById('edit-local-bandera').value;
+  const localNombre = document.getElementById('edit-local-nombre').value;
+  const visit = document.getElementById('edit-visit-bandera').value;
+  const visitNombre = document.getElementById('edit-visit-nombre').value;
+
+  // Guardar en Supabase (tabla partido_overrides)
+  await sb.from('partido_overrides').upsert({
+    partido_id: pid, local, local_nombre: localNombre, visit, visit_nombre: visitNombre
+  }, { onConflict: 'partido_id' });
+  toast('✅ Partido actualizado. Los usuarios verán los cambios.');
+}
+
+// ─── CONFIG ───
+function saveConfig() {
+  const cfg = {
+    exacto: document.getElementById('cfg-exacto').value,
+    resultado: document.getElementById('cfg-resultado').value,
+    multOct: document.getElementById('cfg-mult-oct').value,
+    multQrt: document.getElementById('cfg-mult-qrt').value,
+    multSemi: document.getElementById('cfg-mult-semi').value,
+    multFinal: document.getElementById('cfg-mult-final').value,
+  };
+  localStorage.setItem('prode_config', JSON.stringify(cfg));
+  toast('✅ Configuración guardada');
+}
+
+function changeAdminPwd() {
+  const pwd = document.getElementById('new-admin-pwd').value;
+  if (pwd.length < 6) return toast('La contraseña debe tener al menos 6 caracteres');
+  localStorage.setItem(ADMIN_PWD_KEY, pwd);
+  toast('✅ Contraseña actualizada');
+}
+
+async function resetPronos() {
+  await sb.from('pronosticos').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  toast('✅ Pronósticos reseteados');
+}
+async function resetResultados() {
+  await sb.from('resultados').delete().neq('partido_id','__none__');
+  toast('✅ Resultados reseteados');
+}
+
+// Enter para login
+document.getElementById('admin-pwd').addEventListener('keydown', e => { if(e.key==='Enter') doAdminLogin(); });
+</script>
+</body>
+</html>
