@@ -883,15 +883,58 @@ function afterLogin() {
 // ══════════════════════════════════════════════
 async function loadGrupos() {
   const container = document.getElementById('grupos-list');
-  container.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
-  // Obtener grupos donde el usuario es miembro
-  const { data, error } = await sb
-  .from('grupo_miembros')
-  .insert({
-    grupo_id: grupo.id,
-    usuario_id: usuario.id
-  });
+  container.innerHTML =
+    '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+  // Buscar memberships del usuario
+  const { data: memberships, error } = await sb
+    .from('grupo_miembros')
+    .select(`
+      grupo_id,
+      es_admin,
+      grupos (*)
+    `)
+    .eq('usuario_id', currentUser.id);
+
+  if (error) {
+    console.error(error);
+    container.innerHTML =
+      '<p style="color:var(--text3)">Error cargando grupos</p>';
+    return;
+  }
+
+  if (!memberships || memberships.length === 0) {
+    container.innerHTML =
+      '<p style="color:var(--text3)">Todavía no estás en ningún grupo.</p>';
+    return;
+  }
+
+  container.innerHTML = memberships.map(m => {
+    const g = m.grupos;
+
+    return `
+      <div class="grupo-card" onclick="enterGrupoById('${g.id}')">
+        <div class="grupo-card-header">
+          <div class="grupo-emoji">${g.emoji || '🏆'}</div>
+
+          <div>
+            <div class="grupo-title">${g.nombre}</div>
+
+            <div class="grupo-code">
+              Código: ${g.codigo}
+            </div>
+          </div>
+        </div>
+
+        ${m.es_admin
+          ? '<div class="badge badge-gold">ADMIN</div>'
+          : ''
+        }
+      </div>
+    `;
+  }).join('');
+}
 
 console.log('INSERT GRUPO_MIEMBROS', { data, error });
 
@@ -1001,20 +1044,56 @@ async function crearGrupo() {
 
 async function joinGrupo() {
   const codigo = document.getElementById('join-code-input').value.trim().toUpperCase();
-  if (codigo.length < 4) return toast('Ingresá el código');
 
-  const { data: grupo } = await sb.from('grupos').select('*').eq('codigo', codigo).single();
-  if (!grupo) return toast('Código incorrecto');
+  if (codigo.length < 4) {
+    return toast('Ingresá el código');
+  }
+
+  const { data: grupo, error: grupoError } = await sb
+    .from('grupos')
+    .select('*')
+    .eq('codigo', codigo)
+    .single();
+
+  if (grupoError || !grupo) {
+    console.error(grupoError);
+    return toast('Código incorrecto');
+  }
 
   // Verificar si ya es miembro
-  const { data: existing } = await sb.from('grupo_miembros')
-    .select('id').eq('grupo_id', grupo.id).eq('usuario_id', currentUser.id).single();
-  if (existing) { closeModal('modal-join-grupo'); return enterGrupo(grupo); }
+  const { data: existing } = await sb
+    .from('grupo_miembros')
+    .select('id')
+    .eq('grupo_id', grupo.id)
+    .eq('usuario_id', currentUser.id)
+    .maybeSingle();
 
-  await sb.from('grupo_miembros').insert({ grupo_id: grupo.id, usuario_id: currentUser.id, es_admin: false });
+  if (existing) {
+    closeModal('modal-join-grupo');
+    return enterGrupo(grupo);
+  }
+
+  const { data, error } = await sb
+    .from('grupo_miembros')
+    .insert({
+      grupo_id: grupo.id,
+      usuario_id: currentUser.id,
+      es_admin: false
+    });
+
+  console.log('INSERT GRUPO_MIEMBROS', { data, error });
+
+  if (error) {
+    console.error(error);
+    return toast('Error: ' + error.message);
+  }
+
   closeModal('modal-join-grupo');
+
   toast('✅ Te uniste a ' + grupo.nombre);
-  loadGrupos();
+
+  await loadGrupos();
+
 }
 
 function showInvite(grupoId, grupoNombre, codigo) {
