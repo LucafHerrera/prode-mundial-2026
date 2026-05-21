@@ -882,6 +882,12 @@ function afterLogin() {
 //  GRUPOS
 // ══════════════════════════════════════════════
 async function loadGrupos() {
+
+  if (!currentUser || !currentUser.id) {
+    console.error('Usuario no cargado');
+    return;
+  }
+
   const container = document.getElementById('grupos-list');
 
   container.innerHTML =
