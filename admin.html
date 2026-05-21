@@ -656,7 +656,6 @@ async function loadResultadosPartidos(etapa) {
 }
 
 async function guardarResultado(partidoId) {
-
   const l = document.getElementById('res-l-' + partidoId).value;
   const r = document.getElementById('res-r-' + partidoId).value;
 
@@ -682,236 +681,68 @@ async function guardarResultado(partidoId) {
     return toast('Error guardando resultado');
   }
 
-  await recalcPuntos(partidoId, gLocal, gVisit);
-
-  toast('✅ Resultado guardado y puntos actualizados');
-
-  const activeBtn = document.querySelector(
-    '#etapa-tabs-admin .section-tab.active'
-  );
-
-  const etapaActiva = ETAPAS.find(
-    e => e.label === activeBtn.textContent
-  );
-
-  if (etapaActiva) {
-    loadResultadosPartidos(etapaActiva.id);
-  }
-}
-
-async function recalcPuntos(partidoId, gLocal, gVisit) {
-
-  const partido = PARTIDOS.find(p => p.id === partidoId);
-
-  let mult = 1;
-
-  if (partido) {
-
-    if (partido.etapa === 'final') {
-      mult = 4;
-    }
-
-    else if (partido.etapa === 'semifinal') {
-      mult = 3;
-    }
-
-    else if (
-      partido.etapa === 'octavos' ||
-      partido.etapa === 'cuartos' ||
-      partido.etapa === 'tercero'
-    ) {
-      mult = 2;
-    }
-  }
-
-  const { data: pronos, error } = await sb
-    .from('pronosticos')
-    .select('*')
-    .eq('partido_id', partidoId);
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  for (const prono of pronos || []) {
-
-    let pts = 0;
-
-    // exacto
-    if (
-      prono.goles_local === gLocal &&
-      prono.goles_visit === gVisit
-    ) {
-
-      pts = 3 * mult;
-
-    }
-
-    else {
-
-      const pronoResultado =
-        Math.sign(prono.goles_local - prono.goles_visit);
-
-      const realResultado =
-        Math.sign(gLocal - gVisit);
-
-      if (pronoResultado === realResultado) {
-        pts = 1 * mult;
-      }
-    }
-
-    const { error: updateError } = await sb
-      .from('pronosticos')
-      .update({
-        puntos: pts
-      })
-      .eq('usuario_id', prono.usuario_id)
-      .eq('grupo_id', prono.grupo_id)
-      .eq('partido_id', prono.partido_id);
-
-    if (updateError) {
-      console.error(updateError);
-    }
-  }
-
-  console.log('✅ Puntos recalculados');
-}
-
-  const { data: pronos, error } = await sb
-    .from('pronosticos')
-    .select('*')
-    .eq('partido_id', partidoId);
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  for (const prono of pronos || []) {
-
-    let pts = 0;
-
-    // exacto
-    if (
-      prono.goles_local === gLocal &&
-      prono.goles_visit === gVisit
-    ) {
-
-      pts = 3 * mult;
-
-    } else {
-
-      const pronoResultado =
-        Math.sign(prono.goles_local - prono.goles_visit);
-
-      const realResultado =
-        Math.sign(gLocal - gVisit);
-
-      if (pronoResultado === realResultado) {
-        pts = 1 * mult;
-      }
-    }
-
-    const { error: updateError } = await sb
-      .from('pronosticos')
-      .update({ puntos: pts })
-      .eq('usuario_id', prono.usuario_id)
-      .eq('grupo_id', prono.grupo_id)
-      .eq('partido_id', prono.partido_id);
-
-    if (updateError) {
-      console.error(updateError);
-    }
-  }
-
-  console.log('✅ Puntos recalculados');
-}
   // recalcular puntos
-  await recalcPuntos(partidoId, gLocal, gVisit);
+  await recalcPuntos(partidoId);
 
   toast('✅ Resultado guardado y puntos actualizados');
-async function recalcPuntos(partidoId, gLocal, gVisit) {
 
-  const partido = PARTIDOS.find(p => p.id === partidoId);
-
-  let mult = 1;
-
-  if (partido) {
-    if (partido.etapa === 'final') mult = 4;
-    else if (partido.etapa === 'semifinal') mult = 3;
-    else if (
-      partido.etapa === 'octavos' ||
-      partido.etapa === 'cuartos' ||
-      partido.etapa === 'tercero'
-    ) mult = 2;
-  }
-
-  // buscar todos los pronósticos de ese partido
-  const { data: pronos, error } = await sb
-    .from('pronosticos')
-    .select('*')
-    .eq('partido_id', partidoId);
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  for (const prono of pronos || []) {
-
-    let pts = 0;
-
-    // exacto
-    if (
-      prono.goles_local === gLocal &&
-      prono.goles_visit === gVisit
-    ) {
-
-      pts = 3 * mult;
-
-    } else {
-
-      const pronoResultado =
-        Math.sign(prono.goles_local - prono.goles_visit);
-
-      const realResultado =
-        Math.sign(gLocal - gVisit);
-
-      // acertó ganador/empate
-      if (pronoResultado === realResultado) {
-        pts = 1 * mult;
-      }
-    }
-
-    // actualizar puntos
-    await sb
-      .from('pronosticos')
-      .update({ puntos: pts })
-      .eq('usuario_id', prono.usuario_id)
-      .eq('grupo_id', prono.grupo_id)
-      .eq('partido_id', prono.partido_id);
-  }
-
-  console.log('✅ Puntos recalculados');
-}
-  // recargar lista
-  const activeBtn = document.querySelector(
-    '#etapa-tabs-admin .section-tab.active'
-  );
-
-  const etapaActiva = ETAPAS.find(
-    e => e.label === activeBtn.textContent
-  );
+  const activeBtn = document.querySelector('#etapa-tabs-admin .section-tab.active');
+  const etapaActiva = ETAPAS.find(e => e.label === activeBtn.textContent);
 
   if (etapaActiva) {
     loadResultadosPartidos(etapaActiva.id);
   }
 }
 
+async function recalcPuntos(partidoId) {
+
+  const { data: resultado, error } = await sb
+    .from('resultados')
+    .select('*')
+    .eq('partido_id', partidoId)
+    .single();
+
+  if (error || !resultado) return;
+
+  const { data: pronosticos, error: err2 } = await sb
+    .from('pronosticos')
+    .select('*')
+    .eq('partido_id', partidoId);
+
+  if (err2 || !pronosticos) return;
+
+  const gLocal = resultado.goles_local;
+  const gVisit = resultado.goles_visit;
+
+  for (const p of pronosticos) {
+
+    let puntos = 0;
+
+    // exacto
+    if (p.goles_local === gLocal && p.goles_visit === gVisit) {
+      puntos = 3;
+    } else {
+
+      const prono = Math.sign(p.goles_local - p.goles_visit);
+      const real = Math.sign(gLocal - gVisit);
+
+      if (prono === real) {
+        puntos = 1;
+      }
+    }
+
+    const { error: upErr } = await sb
+      .from('pronosticos')
+      .update({ puntos })
+      .eq('id', p.id);
+
+    if (upErr) console.error(upErr);
+  }
+
+  console.log('✅ Puntos recalculados OK');
+}
 
 
-  
 // ─── USUARIOS ───
 async function loadUsuarios() {
   const { data: users } = await sb.from('usuarios').select('*').order('created_at',{ascending:false});
