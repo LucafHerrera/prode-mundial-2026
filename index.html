@@ -942,45 +942,6 @@ async function loadGrupos() {
   }).join('');
 }
 
-console.log('INSERT GRUPO_MIEMBROS', { data, error });
-
-if (error) {
-  console.error(error);
-  return toast('Error: ' + error.message);
-}
-
-  container.innerHTML = '';
-  for (const m of memberships) {
-    const g = m.grupos;
-    // Contar miembros
-    const { count } = await sb.from('grupo_miembros').select('*', { count:'exact', head:true }).eq('grupo_id', g.id);
-    // Mis puntos en este grupo
-    const pts = await calcMisPuntos(g.id);
-
-    const card = document.createElement('div');
-    card.className = 'grupo-card';
-    card.innerHTML = `
-      <div class="grupo-card-top">
-        <div class="grupo-icon" style="background:#${g.color||'F5C842'}22;">${g.emoji||'🏆'}</div>
-        <div style="flex:1;">
-          <div class="grupo-nombre">${g.nombre}</div>
-          <div class="grupo-meta">${count} participante${count!==1?'s':''} · Código: ${g.codigo}</div>
-        </div>
-        <button onclick="event.stopPropagation();showInvite('${g.id}','${g.nombre}','${g.codigo}')"
-          style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text2);cursor:pointer;">
-          Invitar
-        </button>
-      </div>
-      <div class="grupo-stats">
-        <div class="grupo-stat"><div class="grupo-stat-num">${count}</div><div class="grupo-stat-label">Jugadores</div></div>
-        <div class="grupo-stat"><div class="grupo-stat-num">${pts}</div><div class="grupo-stat-label">Mis pts</div></div>
-        <div class="grupo-stat"><div class="grupo-stat-num">0</div><div class="grupo-stat-label">Pendientes</div></div>
-      </div>`;
-    card.onclick = () => enterGrupo(g);
-    container.appendChild(card);
-  }
-
-
 async function calcMisPuntos(grupoId) {
   const { data } = await sb.from('pronosticos')
     .select('puntos')
