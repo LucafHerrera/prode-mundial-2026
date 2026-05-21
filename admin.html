@@ -552,7 +552,7 @@ function showPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
-  event.currentTarget.classList.add('active');
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
   if (id==='dashboard') loadDashboard();
   if (id==='usuarios') loadUsuarios();
   if (id==='grupos') loadGruposAdmin();
@@ -695,54 +695,6 @@ async function guardarResultado(partidoId) {
   }
 }
 console.log("SCRIPT MITAD");
-async function recalcPuntos(partidoId) {
-
-  const { data: resultado, error } = await sb
-    .from('resultados')
-    .select('*')
-    .eq('partido_id', partidoId)
-    .single();
-
-  if (error || !resultado) return;
-
-  const { data: pronosticos, error: err2 } = await sb
-    .from('pronosticos')
-    .select('*')
-    .eq('partido_id', partidoId);
-
-  if (err2 || !pronosticos) return;
-
-  const gLocal = resultado.goles_local;
-  const gVisit = resultado.goles_visit;
-
-  for (const p of pronosticos) {
-
-    let puntos = 0;
-
-    // exacto
-    if (p.goles_local === gLocal && p.goles_visit === gVisit) {
-      puntos = 3;
-    } else {
-
-      const prono = Math.sign(p.goles_local - p.goles_visit);
-      const real = Math.sign(gLocal - gVisit);
-
-      if (prono === real) {
-        puntos = 1;
-      }
-    }
-
-    const { error: upErr } = await sb
-      .from('pronosticos')
-      .update({ puntos })
-      .eq('id', p.id);
-
-    if (upErr) console.error(upErr);
-  }
-
-  console.log('✅ Puntos recalculados OK');
-}
-
 
 // ─── USUARIOS ───
 async function loadUsuarios() {
@@ -924,7 +876,7 @@ async function resetResultados() {
   toast('✅ Resultados reseteados');
 }
 
-// Lógica de cálculo de puntos real y definitiva
+// Lógica de cálculo de puntos real, definitiva y ultra segura
 async function recalcPuntos(partidoId) {
   const { data: resultado, error } = await sb
     .from('resultados')
@@ -978,14 +930,20 @@ async function recalcPuntos(partidoId) {
       }
     }
 
-    // Guardamos los puntos calculados en la fila del pronóstico del usuario
-    await sb
+    // ACTUALIZACIÓN ROBUSTA: Filtramos usando las llaves compuestas lógicas del negocio
+    const { error: upErr } = await sb
       .from('pronosticos')
       .update({ puntos: puntos })
-      .eq('id', p.id);
+      .eq('partido_id', partidoId)
+      .eq('usuario_id', p.usuario_id)
+      .eq('grupo_id', p.grupo_id);
+
+    if (upErr) {
+      console.error("Error crítico al actualizar puntos:", upErr);
+    }
   }
 
-  console.log('✅ Puntos recalculados con multiplicadores OK');
+  console.log('✅ Puntos recalculados e impactados con llaves compuestas OK');
 }
 
 // Registramos la función correctamente en la ventana global
