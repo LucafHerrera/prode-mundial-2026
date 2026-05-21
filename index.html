@@ -961,6 +961,22 @@ function enterGrupo(grupo) {
   buildEtapaTabs();
   loadPartidos('grupos');
 
+  async function enterGrupoById(grupoId) {
+
+  const { data: grupo, error } = await sb
+    .from('grupos')
+    .select('*')
+    .eq('id', grupoId)
+    .single();
+
+  if (error || !grupo) {
+    console.error(error);
+    return toast('Error cargando grupo');
+  }
+
+  enterGrupo(grupo);
+}
+
   // Banner admin si existe
   if (grupo.banner_url) {
     document.getElementById('banner-pronosticos').style.display = 'block';
