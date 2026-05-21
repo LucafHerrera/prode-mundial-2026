@@ -625,7 +625,7 @@ body {
 
 <div class="toast" id="toast"></div>
 
-<script>
+<<script>
 // ══════════════════════════════════════════════
 //  CONFIG SUPABASE — reemplazá con tus keys
 // ══════════════════════════════════════════════
@@ -704,7 +704,7 @@ function showMainScreen(id) {
   const nb = document.getElementById('nav-'+id);
   if (nb) nb.classList.add('active');
 
-  // Control Dinámico de Visibilidad del botón Tabla (Punto 1)
+  // Control Dinámico de Visibilidad del botón Tabla
   const navTablaBtn = document.getElementById('nav-tabla');
   if (currentGrupo) {
     if (navTablaBtn) navTablaBtn.style.display = 'flex';
@@ -712,6 +712,8 @@ function showMainScreen(id) {
     if (navTablaBtn) navTablaBtn.style.display = 'none';
   }
 
+  if (id === 'grupos') loadGrupos();
+  if (id === 'pronosticos') { buildEtapaTabs(); loadPartidos(currentEtapa); }
   if (id === 'tabla' && currentGrupo) loadTabla();
   if (id === 'perfil') loadPerfil();
 }
@@ -767,15 +769,6 @@ function switchAvatarTab(mode) {
   document.querySelectorAll('.avatar-tab-btn').forEach((b,i) => b.classList.toggle('toggle', (i===0&&mode==='emoji')||(i===1&&mode==='foto')));
   document.getElementById('avatar-emoji-grid').style.display = mode==='emoji' ? 'grid' : 'none';
   document.getElementById('avatar-foto-area').classList.toggle('active-tab', mode==='foto');
-}
-
-function renderAvatarEl(el, user) {
-  if (!el) return;
-  if (user.foto_url) {
-    el.innerHTML = `<img src="${user.foto_url}" alt="">`;
-  } else {
-    el.textContent = user.emoji || '⚽';
-  }
 }
 
 // ══════════════════════════════════════════════
@@ -837,6 +830,15 @@ async function tryAutoLogin() {
   return false;
 }
 
+function renderAvatarEl(el, user) {
+  if (!el || !user) return;
+  if (user.foto_url) {
+    el.innerHTML = `<img src="${user.foto_url}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    el.textContent = user.emoji || '⚽';
+  }
+}
+
 function afterLogin() {
   document.getElementById('header-user-name').textContent = currentUser.nombre;
   renderAvatarEl(document.getElementById('header-avatar'), currentUser);
@@ -852,6 +854,7 @@ function afterLogin() {
 async function loadGrupos() {
   if (!currentUser || !currentUser.id) return;
   const container = document.getElementById('grupos-list');
+  if (!container) return;
   container.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
   const { data: memberships, error } = await sb
@@ -875,7 +878,6 @@ async function loadGrupos() {
     if (members) {
       for (const member of members) {
         if (!member.usuarios) continue;
-        // Pronósticos globales (Punto 2: ya no filtra por grupo_id)
         const { data: pronos } = await sb.from('pronosticos').select('puntos').eq('usuario_id', member.usuario_id);
         const totalPts = (pronos || []).reduce((sum, p) => sum + (p.puntos || 0), 0);
         listaPuntos.push({ nombre: member.usuarios.nombre, pts: totalPts });
@@ -926,11 +928,9 @@ function enterGrupo(grupo) {
   document.getElementById('prono-grupo-name').textContent = grupo.nombre.toUpperCase();
   document.getElementById('tabla-grupo-name').textContent = grupo.nombre.toUpperCase();
   
-  // Habilitamos dinámicamente el botón de Tabla del menú inferior (Punto 1)
   const navTablaBtn = document.getElementById('nav-tabla');
   if (navTablaBtn) navTablaBtn.style.display = 'flex';
 
-  // Redirección directa al listado de integrantes / Tabla de Posiciones (Punto 3)
   showMainScreen('tabla');
 }
 
@@ -938,9 +938,8 @@ function goBack() {
   currentGrupo = null;
   localStorage.removeItem('prode_current_grupo');
   const navTablaBtn = document.getElementById('nav-tabla');
-  if (navTablaBtn) navTablaBtn.style.display = 'none'; // Ocultamos el botón al salir del grupo
+  if (navTablaBtn) navTablaBtn.style.display = 'none';
   showMainScreen('grupos');
-  loadGrupos();
 }
 
 // ══════════════════════════════════════════════
@@ -979,18 +978,19 @@ async function joinGrupo() {
 }
 
 // ══════════════════════════════════════════════
-//  PRONÓSTICOS (Punto 2: Sin grupo_id)
+//  PRONÓSTICOS (Globales)
 // ══════════════════════════════════════════════
 function buildEtapaTabs() {
   const cont = document.getElementById('etapa-tabs');
   if (!cont) return; cont.innerHTML = '';
   ETAPAS.forEach((e, i) => {
     const btn = document.createElement('button');
-    btn.className = 'etapa-chip' + (i===0?' active':'');
+    btn.className = 'etapa-chip' + (e.id === currentEtapa ? ' active' : '');
     btn.textContent = e.label;
     btn.onclick = () => {
       document.querySelectorAll('.etapa-chip').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
+      currentEtapa = e.id;
       loadPartidos(e.id);
     };
     cont.appendChild(btn);
@@ -1090,7 +1090,7 @@ async function guardarProno(partidoId) {
 }
 
 // ══════════════════════════════════════════════
-//  TABLA DE POSICIONES CON TENDENCIAS (Punto 3)
+//  TABLA DE POSICIONES CON TENDENCIAS
 // ══════════════════════════════════════════════
 async function loadTabla() {
   const cont = document.getElementById('ranking-list');
@@ -1107,10 +1107,8 @@ async function loadTabla() {
     const { data: pronos } = await sb.from('pronosticos').select('puntos, partido_id').eq('usuario_id', u.id);
     const ptsTotales = (pronos||[]).reduce((s,p) => s+(p.puntos||0), 0);
 
-    // Calculamos los puntos de la fecha anterior (restando el último partido jugado si tiene puntos asignados)
     let ptsAnteriores = ptsTotales;
     if (pronos && pronos.length > 0) {
-      // Ordenamos para encontrar el último registro impactado en base a tus IDs de partidos cargados
       const ultimoProno = [...pronos].sort((a,b) => b.partido_id.localeCompare(a.partido_id))[0];
       ptsAnteriores = ptsTotales - (ultimoProno.puntos || 0);
     }
@@ -1118,32 +1116,30 @@ async function loadTabla() {
     resultados.push({ usuario: u, pts: ptsTotales, ptsPrev: ptsAnteriores, exactos: (pronos||[]).filter(p=>p.puntos>=3).length });
   }
 
-  // 1. Calculamos el orden previo para saber las tendencias
   const rankingPrevio = [...resultados].sort((a,b) => b.ptsPrev - a.ptsPrev);
-  
-  // 2. Calculamos el orden real actual
   resultados.sort((a,b) => b.pts - a.pts || b.exactos - a.exactos);
 
-  // Armamos la tarjeta resumen del usuario logueado arriba
   const myRank = resultados.findIndex(r => r.usuario.id === currentUser.id);
   const myData = resultados[myRank];
   const myAvatarEl = document.getElementById('tabla-my-avatar');
   if (myAvatarEl) renderAvatarEl(myAvatarEl, myData ? myData.usuario : currentUser);
-  document.getElementById('tabla-my-name').textContent = currentUser.nombre;
-  document.getElementById('tabla-my-pos').textContent = myRank >= 0 ? `${myRank+1}° lugar` : '—';
-  document.getElementById('tabla-my-pts').textContent = myData ? myData.pts : 0;
+  
+  const myNameEl = document.getElementById('tabla-my-name');
+  if (myNameEl) myNameEl.textContent = currentUser.nombre;
+  const myPosEl = document.getElementById('tabla-my-pos');
+  if (myPosEl) myPosEl.textContent = myRank >= 0 ? `${myRank+1}° lugar` : '—';
+  const myPtsEl = document.getElementById('tabla-my-pts');
+  if (myPtsEl) myPtsEl.textContent = myData ? myData.pts : 0;
 
   cont.innerHTML = '';
   resultados.forEach((r, i) => {
-    // Averiguamos en qué puesto estaba en la simulación previa
     const posPrevia = rankingPrevio.findIndex(p => p.usuario.id === r.usuario.id);
     
-    // Determinamos el ícono de tendencia lúdica (Punto 3)
     let tendenciaHtml = '<span style="color:var(--text3); font-weight:bold; margin-right:8px;">➖</span>';
     if (posPrevia > i) {
-      tendenciaHtml = '<span style="color:#2D6A4F; font-weight:bold; margin-right:8px;">▲ 🟢</span>'; // Subió
+      tendenciaHtml = '<span style="color:#2D6A4F; font-weight:bold; margin-right:8px;">▲ 🟢</span>';
     } else if (posPrevia < i) {
-      tendenciaHtml = '<span style="color:#C1292E; font-weight:bold; margin-right:8px;">▼ 🔴</span>'; // Bajó
+      tendenciaHtml = '<span style="color:#C1292E; font-weight:bold; margin-right:8px;">▼ 🔴</span>';
     }
 
     const row = document.createElement('div');
@@ -1171,24 +1167,33 @@ async function loadTabla() {
 // ══════════════════════════════════════════════
 async function loadPerfil() {
   if (!currentUser) return;
-  document.getElementById('perfil-nombre').textContent = currentUser.nombre;
-  renderAvatarEl(document.getElementById('perfil-avatar-big'), currentUser);
+  
+  const nameEl = document.getElementById('perfil-nombre');
+  if (nameEl) nameEl.textContent = currentUser.nombre;
+  
+  const avatarEl = document.getElementById('perfil-avatar-big');
+  if (avatarEl) renderAvatarEl(avatarEl, currentUser);
 
   const { data: pronos } = await sb.from('pronosticos').select('*').eq('usuario_id', currentUser.id);
   const exactos = (pronos||[]).filter(p => p.puntos>=3).length;
   const pts = (pronos||[]).reduce((s,p)=>s+(p.puntos||0),0);
   const { count: grupos } = await sb.from('grupo_miembros').select('*',{count:'exact',head:true}).eq('usuario_id',currentUser.id);
 
-  document.getElementById('ps-exactos').textContent = exactos;
-  document.getElementById('ps-pts').textContent = pts;
-  document.getElementById('ps-grupos').textContent = grupos||0;
+  const exactosEl = document.getElementById('ps-exactos');
+  if (exactosEl) exactosEl.textContent = exactos;
+  const ptsEl = document.getElementById('ps-pts');
+  if (ptsEl) ptsEl.textContent = pts;
+  const gruposEl = document.getElementById('ps-grupos');
+  if (gruposEl) gruposEl.textContent = grupos||0;
 }
 
 function cerrarSesion() {
   localStorage.removeItem('prode_user_id');
   localStorage.removeItem('prode_current_grupo');
   currentUser = null; currentGrupo = null;
-  document.getElementById('bottom-nav').style.with = 'none';
+  const navTablaBtn = document.getElementById('nav-tabla');
+  if (navTablaBtn) navTablaBtn.style.display = 'none';
+  document.getElementById('bottom-nav').style.display = 'none';
   showScreen('login');
 }
 
