@@ -1334,12 +1334,17 @@ async function guardarProno(partidoId, mult) {
   toast('✅ Pronóstico guardado');
 }
 
-// ══════════════════════════════════════════════
-//  TABLA / RANKING
+/// ══════════════════════════════════════════════
+//  TABLA / RANKING - CORREGIDA
 // ══════════════════════════════════════════════
 async function loadTabla() {
   const cont = document.getElementById('ranking-list');
   cont.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+  // Traemos la configuración de puntos para saber los valores base de los exactos
+  const configLocal = localStorage.getItem('prode_config');
+  const cfg = configLocal ? JSON.parse(configLocal) : { exacto: 3, resultado: 1, multOct: 2, multQrt: 2, multSemi: 3, multFinal: 4 };
+  const baseExacto = parseInt(cfg.exacto);
 
   // Obtener todos los miembros del grupo
   const { data: members } = await sb.from('grupo_miembros')
@@ -1348,7 +1353,7 @@ async function loadTabla() {
 
   if (!members) return;
 
-  // Para cada miembro, sumar puntos
+  // Para cada miembro, sumar puntos reales de la base de datos
   const resultados = [];
   for (const m of members) {
     const u = m.usuarios;
@@ -1357,21 +1362,37 @@ async function loadTabla() {
       .eq('usuario_id', u.id)
       .eq('grupo_id', currentGrupo.id);
 
+    // Suma total de puntos guardados por el admin
     const pts = (pronos||[]).reduce((s,p) => s+(p.puntos||0), 0);
+    
+    // Contamos los exactos reales teniendo en cuenta el multiplicador de cada etapa
     const exactos = (pronos||[]).filter(p => {
-      // determinar si fue exacto requeriría cruzar con resultados — simplificado
-      return p.puntos >= 3;
+      if (!p.puntos || p.puntos === 0) return false;
+      
+      // Buscamos el partido para saber su etapa y su multiplicador correspondiente
+      const partido = PARTIDOS.find(pt => pt.id === p.partido_id);
+      let mult = 1;
+      if (partido) {
+        if (partido.etapa === 'octavos') mult = parseInt(cfg.multOct);
+        if (partido.etapa === 'cuartos') mult = parseInt(cfg.multQrt);
+        if (partido.etapa === 'semifinal') mult = parseInt(cfg.multSemi);
+        if (partido.etapa === 'final') mult = parseInt(cfg.multFinal);
+      }
+      
+      // Un pronóstico es exacto SÓLO si los puntos son iguales al exacto base por el multiplicador
+      return p.puntos === (baseExacto * mult);
     }).length;
+
     resultados.push({ usuario: u, pts, exactos, pronos: (pronos||[]).length });
   }
 
-  // Ordenar
+  // Ordenar: Primero por puntos totales, si hay empate desempata quien tenga más "Exactos"
   resultados.sort((a,b) => b.pts - a.pts || b.exactos - a.exactos);
 
   const myRank = resultados.findIndex(r => r.usuario.id === currentUser.id);
   const myData = resultados[myRank];
 
-  // Header personal
+  // Header personal del usuario logueado
   const myAvatarEl = document.getElementById('tabla-my-avatar');
   renderAvatarEl(myAvatarEl, myData ? myData.usuario : currentUser);
   document.getElementById('tabla-my-name').textContent = currentUser.nombre;
