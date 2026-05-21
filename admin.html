@@ -922,7 +922,7 @@ async function resetResultados() {
   await sb.from('resultados').delete().neq('partido_id','__none__');
   toast('✅ Resultados reseteados');
 }
-
+window.recalcPuntos = recalcPuntos;
 // Enter para login
 document.getElementById('admin-pwd').addEventListener('keydown', e => { if(e.key==='Enter') doAdminLogin(); });
 </script>
