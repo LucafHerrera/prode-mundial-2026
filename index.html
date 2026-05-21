@@ -438,6 +438,11 @@ body {
         <input type="text" id="login-nombre" placeholder="Ej: Nacho, Sofi, El Tano..." maxlength="20">
       </div>
 
+      <div class="field" style="margin-bottom: 16px;">
+        <label>Contraseña de acceso</label>
+        <input type="password" id="login-password" placeholder="Mínimo 4 caracteres" style="width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 12px 14px; color: white; font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none;">
+      </div>
+
       <div class="avatar-section">
         <label>Tu foto de perfil</label>
         <div class="avatar-tabs">
@@ -446,8 +451,7 @@ body {
         </div>
 
         <div id="avatar-emoji-grid" class="emoji-grid">
-          <!-- populated by JS -->
-        </div>
+          </div>
 
         <div id="avatar-foto-area" class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
           <img id="photo-preview" src="" alt="" class="photo-preview" style="display:none;">
@@ -459,7 +463,6 @@ body {
       <button class="btn-primary" id="btn-ingresar" onclick="doLogin()" disabled>Ingresar →</button>
     </div>
   </div>
-
   <!-- GRUPOS -->
   <div id="screen-grupos" class="screen">
     <div class="app-header">
@@ -668,12 +671,12 @@ const PARTIDOS = [
   { id:'g8', etapa:'grupos', grupo:'D', fecha:'2026-06-14', hora:'18:00', local:'🇳🇱', local_nombre:'Países Bajos', visit:'🇸🇳', visit_nombre:'Senegal', mult:1 },
   { id:'g9', etapa:'grupos', grupo:'E', fecha:'2026-06-15', hora:'15:00', local:'🇺🇾', local_nombre:'Uruguay', visit:'🇦🇺', visit_nombre:'Australia', mult:1 },
   { id:'g10', etapa:'grupos', grupo:'E', fecha:'2026-06-15', hora:'18:00', local:'🇨🇭', local_nombre:'Suiza', visit:'🇨🇷', visit_nombre:'Corea del Sur', mult:1 },
-  { id:'g11', etapa:'grupos', grupo:'F', fecha:'2026-06-16', hora:'15:00', local:'🇧🇪', local_nombre:'Bélgica', visit:'🇩kih', visit_nombre:'Dinamarca', mult:1 },
+  { id:'g11', etapa:'grupos', grupo:'F', fecha:'2026-06-16', hora:'15:00', local:'🇧🇪', local_nombre:'Bélgica', visit:'🇩🇰', visit_nombre:'Dinamarca', mult:1 },
   { id:'g12', etapa:'grupos', grupo:'F', fecha:'2026-06-16', hora:'18:00', local:'🇲🇽', local_nombre:'México', visit:'🇸🇦', visit_nombre:'Arabia Saudita', mult:1 },
   { id:'o1', etapa:'octavos', grupo:'', fecha:'2026-07-01', hora:'15:00', local:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', local_nombre:'1° Grupo A', visit:'🇦🇷', visit_nombre:'2° Grupo B', mult:2 },
   { id:'o2', etapa:'octavos', grupo:'', fecha:'2026-07-01', hora:'19:00', local:'🇧🇷', local_nombre:'1° Grupo B', visit:'🇫🇷', visit_nombre:'2° Grupo A', mult:2 },
   { id:'o3', etapa:'octavos', grupo:'', fecha:'2026-07-02', hora:'15:00', local:'🇪🇸', local_nombre:'1° Grupo C', visit:'🇩🇪', visit_nombre:'2° Grupo D', mult:2 },
-  { id:'o4', etapa:'octavos', grupo:'', fecha:'2026-07-02', hora:'19:00', local:'🇺🇸', local_nombre:'1° Grupo D', visit:'🇳🇱', visit_nombre:'2° Grupo C', mult:2 },
+  { id:'o4', etapa:'octavos', grupo:'', fecha:'2026-07-02', group:'19:00', local:'🇺🇸', local_nombre:'1° Grupo D', visit:'🇳🇱', visit_nombre:'2° Grupo C', mult:2 },
   { id:'q1', etapa:'cuartos', grupo:'', fecha:'2026-07-08', hora:'19:00', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', mult:2 },
   { id:'q2', etapa:'cuartos', grupo:'', fecha:'2026-07-09', hora:'19:00', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', mult:2 },
   { id:'q3', etapa:'cuartos', grupo:'', fecha:'2026-07-10', hora:'19:00', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', mult:2 },
@@ -689,22 +692,20 @@ const PARTIDOS = [
 // ══════════════════════════════════════════════
 function toast(msg, ms=2200) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), ms);
+  if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), ms); }
 }
 
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display=''; });
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.style.display='none'; });
   const s = document.getElementById('screen-'+id);
-  s.style.display = 'flex';
-  s.classList.add('active');
+  if (s) { s.style.display = 'flex'; s.classList.add('active'); }
 }
 
 function showMainScreen(id) {
   const mainScreens = ['grupos','pronosticos','tabla','perfil'];
   mainScreens.forEach(sid => {
     const s = document.getElementById('screen-'+sid);
-    if (s) { s.classList.remove('active'); s.style.display=''; }
+    if (s) { s.classList.remove('active'); s.style.display='none'; }
   });
   const s = document.getElementById('screen-'+id);
   if (s) { s.style.display='flex'; s.classList.add('active'); }
@@ -763,6 +764,7 @@ function calcPuntos(pLocal, pVisit, rLocal, rVisit, mult) {
 // ══════════════════════════════════════════════
 function buildEmojiGrid(containerId, emojis, selectedVar, onSelect) {
   const el = document.getElementById(containerId);
+  if (!el) return;
   el.innerHTML = '';
   emojis.forEach(e => {
     const btn = document.createElement('button');
@@ -782,6 +784,7 @@ function switchAvatarTab(mode) {
 }
 
 function renderAvatarEl(el, user) {
+  if (!el) return;
   if (user.foto_url) {
     el.innerHTML = `<img src="${user.foto_url}" alt="">`;
   } else {
@@ -789,21 +792,8 @@ function renderAvatarEl(el, user) {
   }
 }
 
-// Interfaz Dinámica Corregida: Inyecta la contraseña DEBAJO de la caja de nombre
-window.addEventListener('DOMContentLoaded', () => {
-  const nameField = document.querySelector('.login-card .field');
-  if (nameField) {
-    nameField.insertAdjacentHTML('afterend', `
-      <div class="field" style="margin-bottom: 16px;">
-        <label>Contraseña de acceso</label>
-        <input type="password" id="login-password" placeholder="Mínimo 4 caracteres" style="width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 12px 14px; color: white; font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none;">
-      </div>
-    `);
-  }
-});
-
 // ══════════════════════════════════════════════
-//  VALIDACIÓN ULTRA REACTIVA (Delegación de eventos)
+//  VALIDACIÓN REACTIVA DEL LOGIN
 // ══════════════════════════════════════════════
 function validarFormularioLogin() {
   const nombreInput = document.getElementById('login-nombre');
@@ -813,10 +803,10 @@ function validarFormularioLogin() {
   const password = passwordInput ? passwordInput.value.trim() : '';
   
   const formularioValido = (nombre.length >= 2 && password.length >= 4);
-  document.getElementById('btn-ingresar').disabled = !formularioValido;
+  const btn = document.getElementById('btn-ingresar');
+  if (btn) btn.disabled = !formularioValido;
 }
 
-// Escuchamos cualquier pulsación en la pantalla de login de manera global
 document.addEventListener('input', (e) => {
   if (e.target.id === 'login-nombre' || e.target.id === 'login-password') {
     validarFormularioLogin();
@@ -838,7 +828,6 @@ document.getElementById('photo-input')?.addEventListener('change', function(e) {
   reader.readAsDataURL(file);
 });
 
-
 // ══════════════════════════════════════════════
 //  LOGIN CON CONTRASEÑA
 // ══════════════════════════════════════════════
@@ -850,7 +839,7 @@ async function doLogin() {
   if (!password || password.length < 4) return toast('Escribí una clave de al menos 4 caracteres');
 
   const btn = document.getElementById('btn-ingresar');
-  btn.disabled = true; btn.textContent = 'Verificando...';
+  if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
 
   try {
     let { data: existing } = await sb.from('usuarios').select('*').eq('nombre', nombre).maybeSingle();
@@ -887,7 +876,7 @@ async function doLogin() {
     afterLogin();
   } catch(err) {
     toast(err.message);
-    btn.disabled = false; btn.textContent = 'Ingresar →';
+    if (btn) { btn.disabled = false; btn.textContent = 'Ingresar →'; }
     validarFormularioLogin();
   }
 }
@@ -904,12 +893,17 @@ function afterLogin() {
   document.getElementById('header-user-name').textContent = currentUser.nombre;
   renderAvatarEl(document.getElementById('header-avatar'), currentUser);
   document.getElementById('bottom-nav').style.display = 'flex';
+  
+  // Apagamos explícitamente la pantalla de login para que no se superponga
+  const loginScreen = document.getElementById('screen-login');
+  if (loginScreen) { loginScreen.classList.remove('active'); loginScreen.style.display = 'none'; }
+  
   showScreen('grupos');
   loadGrupos();
 }
 
 // ══════════════════════════════════════════════
-//  GRUPOS CON MINI-POSICIONES (Punto 2)
+//  GRUPOS CON MINI-POSICIONES
 // ══════════════════════════════════════════════
 async function loadGrupos() {
   if (!currentUser || !currentUser.id) return;
@@ -966,7 +960,7 @@ async function loadGrupos() {
       listaPuntos.slice(0, 3).forEach((rank, index) => {
         const medallas = ['🥇', '🥈', '🥉'];
         const prefijo = index < 3 ? medallas[index] : `${index + 1}°`;
-        rankingHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+        rankingHtml += `<div style="display:flex; justify-content:between; margin-bottom:2px;">
           <span style="flex:1;">${prefijo} <strong>${rank.nombre}</strong></span>
           <span style="color:var(--navy); font-weight:700;">${rank.pts} pts</span>
         </div>`;
@@ -1024,9 +1018,6 @@ function enterGrupo(grupo) {
   }
 }
 
-// ══════════════════════════════════════════════
-//  CREAR / JOIN GRUPO
-// ══════════════════════════════════════════════
 function openCrearGrupo() {
   buildEmojiGrid('grupo-emoji-grid', EMOJIS_GRUPO, 'selectedGrupoEmoji', e => { selectedGrupoEmoji = e; });
   openModal('modal-crear-grupo');
@@ -1072,145 +1063,6 @@ function goBack() {
   localStorage.removeItem('prode_current_grupo');
   showMainScreen('grupos');
   loadGrupos();
-}
-
-// ══════════════════════════════════════════════
-//  ETAPAS Y PARTIDOS
-// ══════════════════════════════════════════════
-function buildEtapaTabs() {
-  const cont = document.getElementById('etapa-tabs');
-  cont.innerHTML = '';
-  ETAPAS.forEach((e, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'etapa-chip' + (i===0?' active':'');
-    btn.textContent = e.label;
-    btn.onclick = () => {
-      document.querySelectorAll('.etapa-chip').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      loadPartidos(e.id);
-    };
-    cont.appendChild(btn);
-  });
-}
-
-async function loadPartidos(etapa) {
-  const cont = document.getElementById('partidos-list');
-  cont.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
-
-  const { data: pronos } = await sb.from('pronosticos').select('*').eq('usuario_id', currentUser.id).eq('grupo_id', currentGrupo.id);
-  const pronoMap = {};
-  (pronos||[]).forEach(p => { pronoMap[p.partido_id] = p; });
-
-  const { data: resultados } = await sb.from('resultados').select('*');
-  const resMap = {};
-  (resultados||[]).forEach(r => { resMap[r.partido_id] = r; });
-
-  const partidos = PARTIDOS.filter(p => p.etapa === etapa);
-  cont.innerHTML = '';
-
-  if (partidos.length === 0) {
-    cont.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗓</div><div class="empty-state-title">Sin partidos aún</div><div class="empty-state-text">Los partidos de esta etapa se cargarán próximamente.</div></div>`;
-    return;
-  }
-
-  let lastGrupo = null;
-  partidos.forEach(p => {
-    if (p.grupo && p.grupo !== lastGrupo) {
-      const sep = document.createElement('div');
-      sep.style.cssText = 'padding:12px 12px 6px;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;';
-      sep.textContent = 'Grupo ' + p.grupo;
-      cont.appendChild(sep);
-      lastGrupo = p.grupo;
-    }
-
-    const prono = pronoMap[p.id];
-    const resultado = resMap[p.id];
-    const closed = isClosed(p.fecha, p.hora);
-    const etapaInfo = ETAPAS.find(e => e.id === p.etapa);
-    const mult = etapaInfo ? etapaInfo.mult : 1;
-
-    const pLocal = prono ? p.goles_local : null;
-    const pVisit = prono ? p.goles_visit : null;
-    const rLocal = resultado ? resultado.goles_local : null;
-    const rVisit = resultado ? resultado.goles_visit : null;
-    const pts = calcPuntos(pLocal, pVisit, rLocal, rVisit, mult);
-
-    let chipHtml = '';
-    let ptsHtml = '';
-    if (resultado !== undefined && resultado !== null) {
-      if (pts === null || pts === 0 && pLocal===null) chipHtml = `<span class="pts-chip pts-pendiente">Sin pronóstico</span>`;
-      else if (pts === 3*mult) chipHtml = `<span class="pts-chip pts-exacto">✓ Exacto</span>`;
-      else if (pts === 1*mult) chipHtml = `<span class="pts-chip pts-resultado">~ Resultado</span>`;
-      else chipHtml = `<span class="pts-chip pts-fallo">✗ Fallado</span>`;
-      if (pts > 0) ptsHtml = `+${pts} pts`;
-    } else if (closed) {
-      chipHtml = `<span class="pts-chip pts-cerrado">⏱ Cerrado</span>`;
-    } else {
-      chipHtml = `<span class="pts-chip pts-pendiente">Pendiente</span>`;
-    }
-
-    const multBadge = mult > 1 ? `x${mult}` : 'Fase Grupos';
-    const scoreL = pLocal !== null ? pLocal : '';
-    const scoreR = pVisit !== null ? pVisit : '';
-    const lockedClass = (closed || resultado) ? 'locked' : '';
-
-    const card = document.createElement('div');
-    card.className = 'partido-item';
-    card.innerHTML = `
-      <div class="partido-meta">
-        <span class="partido-meta-left">${formatFechaArg(p.fecha, p.hora)}</span>
-        <span class="partido-meta-right">${multBadge}</span>
-      </div>
-      <div class="partido-content">
-        <div class="equipo-blk">
-          <div class="equipo-bandera">${p.local}</div>
-          <div class="equipo-nombre">${p.local_nombre}</div>
-        </div>
-        <div class="pronostico-center">
-          <div class="score-inputs">
-            <input type="number" class="score-in ${lockedClass}" id="score-l-${p.id}" value="${scoreL}" min="0" max="20" placeholder="–">
-            <span class="score-sep">:</span>
-            <input type="number" class="score-in ${lockedClass}" id="score-r-${p.id}" value="${scoreR}" min="0" max="20" placeholder="–">
-          </div>
-          ${chipHtml}
-        </div>
-        <div class="equipo-blk">
-          <div class="equipo-bandera">${p.visit}</div>
-          <div class="equipo-nombre">${p.visit_nombre}</div>
-        </div>
-      </div>
-      <div class="partido-footer">
-        <div class="partido-footer-left">
-          ${resultado ? `Resultado real: <strong>${rLocal}-${rVisit}</strong>` : (closed ? 'Pronóstico cerrado' : 'Cerrá 1h antes del partido')}
-        </div>
-        <div>
-          ${ptsHtml ? `<span class="partido-footer-right">${ptsHtml}</span>` : ''}
-          ${!closed && !resultado ? `<button class="btn-save-match" onclick="guardarProno('${p.id}',${mult})">Guardar</button>` : ''}
-        </div>
-      </div>`;
-    cont.appendChild(card);
-  });
-}
-
-async function guardarProno(partidoId, mult) {
-  const l = document.getElementById('score-l-'+partidoId).value;
-  const r = document.getElementById('score-r-'+partidoId).value;
-  if (l === '' || r === '') return toast('Ingresá los dos marcadores');
-
-  const gLocal = parseInt(l);
-  const gVisit = parseInt(r);
-
-  const { error } = await sb.from('pronosticos').upsert({
-    usuario_id: currentUser.id,
-    grupo_id: currentGrupo.id,
-    partido_id: partidoId,
-    goles_local: gLocal,
-    goles_visit: gVisit,
-    puntos: 0,
-  }, { onConflict: 'usuario_id,grupo_id,partido_id' });
-
-  if (error) return toast('Error: ' + error.message);
-  toast('✅ Pronóstico guardado');
 }
 
 // ══════════════════════════════════════════════
