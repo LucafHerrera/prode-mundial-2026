@@ -893,7 +893,7 @@ async function loadGrupos() {
   container.innerHTML =
     '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
-  // Buscar memberships del usuario
+  // Buscar grupos del usuario
   const { data: memberships, error } = await sb
     .from('grupo_miembros')
     .select(`
@@ -910,7 +910,7 @@ async function loadGrupos() {
     return;
   }
 
-  if (!memberships || memberships.length === 0) {
+  if (!memberships|| memberships.length === 0) {
     container.innerHTML =
       '<p style="color:var(--text3)">Todavía no estás en ningún grupo.</p>';
     return;
@@ -979,7 +979,7 @@ if (error) {
     card.onclick = () => enterGrupo(g);
     container.appendChild(card);
   }
-}
+
 
 async function calcMisPuntos(grupoId) {
   const { data } = await sb.from('pronosticos')
