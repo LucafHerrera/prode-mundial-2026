@@ -881,6 +881,10 @@ function afterLogin() {
 // ══════════════════════════════════════════════
 //  GRUPOS
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  GRUPOS
+// ══════════════════════════════════════════════
+
 async function loadGrupos() {
 
   if (!currentUser || !currentUser.id) {
@@ -893,7 +897,6 @@ async function loadGrupos() {
   container.innerHTML =
     '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
-  // Buscar grupos del usuario
   const { data: memberships, error } = await sb
     .from('grupo_miembros')
     .select(`
@@ -905,63 +908,73 @@ async function loadGrupos() {
 
   if (error) {
     console.error(error);
+
     container.innerHTML =
       '<p style="color:var(--text3)">Error cargando grupos</p>';
+
     return;
   }
 
-  if (!memberships|| memberships.length === 0) {
+  if (!memberships || memberships.length === 0) {
+
     container.innerHTML =
       '<p style="color:var(--text3)">Todavía no estás en ningún grupo.</p>';
+
     return;
   }
 
   container.innerHTML = memberships.map(m => {
+
     const g = m.grupos;
 
     return `
       <div class="grupo-card" onclick="enterGrupoById('${g.id}')">
+
         <div class="grupo-card-header">
-          <div class="grupo-emoji">${g.emoji || '🏆'}</div>
+
+          <div class="grupo-emoji">
+            ${g.emoji || '🏆'}
+          </div>
 
           <div>
-            <div class="grupo-title">${g.nombre}</div>
+
+            <div class="grupo-title">
+              ${g.nombre}
+            </div>
 
             <div class="grupo-code">
               Código: ${g.codigo}
             </div>
+
           </div>
+
         </div>
 
         ${m.es_admin
           ? '<div class="badge badge-gold">ADMIN</div>'
           : ''
         }
+
       </div>
     `;
+
   }).join('');
 }
 
 async function calcMisPuntos(grupoId) {
-  const { data } = await sb.from('pronosticos')
+
+  const { data } = await sb
+    .from('pronosticos')
     .select('puntos')
     .eq('usuario_id', currentUser.id)
     .eq('grupo_id', grupoId);
+
   if (!data) return 0;
-  return data.reduce((s,r) => s + (r.puntos||0), 0);
+
+  return data.reduce((s, r) => s + (r.puntos || 0), 0);
 }
 
-function enterGrupo(grupo) {
-  currentGrupo = grupo;
-  document.getElementById('prono-grupo-name').textContent = grupo.nombre.toUpperCase();
-  document.getElementById('tabla-grupo-name').textContent = grupo.nombre.toUpperCase();
-  document.getElementById('prono-grupo-sub').textContent = 'Pronósticos · Horario ARG';
-  document.getElementById('tabla-grupo-sub').textContent = 'Clasificación general';
-  showMainScreen('pronosticos');
-  buildEtapaTabs();
-  loadPartidos('grupos');
-
-  async function enterGrupoById(grupoId) {
+async function enterGrupoById(grupoId) {
 
   const { data: grupo, error } = await sb
     .from('grupos')
@@ -970,63 +983,133 @@ function enterGrupo(grupo) {
     .single();
 
   if (error || !grupo) {
+
     console.error(error);
+
     return toast('Error cargando grupo');
   }
 
   enterGrupo(grupo);
 }
 
-  // Banner admin si existe
+function enterGrupo(grupo) {
+
+  currentGrupo = grupo;
+
+  document.getElementById('prono-grupo-name').textContent =
+    grupo.nombre.toUpperCase();
+
+  document.getElementById('tabla-grupo-name').textContent =
+    grupo.nombre.toUpperCase();
+
+  document.getElementById('prono-grupo-sub').textContent =
+    'Pronósticos · Horario ARG';
+
+  document.getElementById('tabla-grupo-sub').textContent =
+    'Clasificación general';
+
+  showMainScreen('pronosticos');
+
+  buildEtapaTabs();
+
+  loadPartidos('grupos');
+
+  // Banner admin
   if (grupo.banner_url) {
+
     document.getElementById('banner-pronosticos').style.display = 'block';
-    document.getElementById('banner-prono-img').src = grupo.banner_url;
+
+    document.getElementById('banner-prono-img').src =
+      grupo.banner_url;
+
   } else {
+
     document.getElementById('banner-pronosticos').style.display = 'none';
   }
 }
 
 function goBack() {
+
   showMainScreen('grupos');
+
   loadGrupos();
 }
 
 // ══════════════════════════════════════════════
 //  CREAR / JOIN GRUPO
 // ══════════════════════════════════════════════
+
 function openCrearGrupo() {
-  buildEmojiGrid('grupo-emoji-grid', EMOJIS_GRUPO, 'selectedGrupoEmoji', e => { selectedGrupoEmoji = e; });
+
+  buildEmojiGrid(
+    'grupo-emoji-grid',
+    EMOJIS_GRUPO,
+    'selectedGrupoEmoji',
+    e => { selectedGrupoEmoji = e; }
+  );
+
   openModal('modal-crear-grupo');
 }
 
-function openJoinGrupo() { openModal('modal-join-grupo'); }
+function openJoinGrupo() {
+
+  openModal('modal-join-grupo');
+}
 
 function genCodigo() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+
+  return Math.random()
+    .toString(36)
+    .substring(2, 8)
+    .toUpperCase();
 }
 
 async function crearGrupo() {
-  const nombre = document.getElementById('nuevo-grupo-nombre').value.trim();
-  if (!nombre) return toast('Escribí un nombre para el grupo');
+
+  const nombre =
+    document.getElementById('nuevo-grupo-nombre').value.trim();
+
+  if (!nombre)
+    return toast('Escribí un nombre para el grupo');
 
   const codigo = genCodigo();
-  const { data: grupo, error } = await sb.from('grupos').insert({
-    nombre, emoji: selectedGrupoEmoji, codigo,
-    creado_por: currentUser.id
-  }).select().single();
 
-  if (error) return toast('Error: ' + error.message);
+  const { data: grupo, error } = await sb
+    .from('grupos')
+    .insert({
+      nombre,
+      emoji: selectedGrupoEmoji,
+      codigo,
+      creado_por: currentUser.id
+    })
+    .select()
+    .single();
 
-  // Agregar al creador como miembro y admin
-  await sb.from('grupo_miembros').insert({ grupo_id: grupo.id, usuario_id: currentUser.id, es_admin: true });
+  if (error)
+    return toast('Error: ' + error.message);
+
+  await sb
+    .from('grupo_miembros')
+    .insert({
+      grupo_id: grupo.id,
+      usuario_id: currentUser.id,
+      es_admin: true
+    });
 
   closeModal('modal-crear-grupo');
+
   toast('✅ Grupo creado. Código: ' + codigo);
+
   loadGrupos();
 }
 
 async function joinGrupo() {
-  const codigo = document.getElementById('join-code-input').value.trim().toUpperCase();
+
+  const codigo =
+    document.getElementById('join-code-input')
+    .value
+    .trim()
+    .toUpperCase();
 
   if (codigo.length < 4) {
     return toast('Ingresá el código');
@@ -1039,11 +1122,12 @@ async function joinGrupo() {
     .single();
 
   if (grupoError || !grupo) {
+
     console.error(grupoError);
+
     return toast('Código incorrecto');
   }
 
-  // Verificar si ya es miembro
   const { data: existing } = await sb
     .from('grupo_miembros')
     .select('id')
@@ -1052,11 +1136,13 @@ async function joinGrupo() {
     .maybeSingle();
 
   if (existing) {
+
     closeModal('modal-join-grupo');
+
     return enterGrupo(grupo);
   }
 
-  const { data, error } = await sb
+  const { error } = await sb
     .from('grupo_miembros')
     .insert({
       grupo_id: grupo.id,
@@ -1064,10 +1150,10 @@ async function joinGrupo() {
       es_admin: false
     });
 
-  console.log('INSERT GRUPO_MIEMBROS', { data, error });
-
   if (error) {
+
     console.error(error);
+
     return toast('Error: ' + error.message);
   }
 
@@ -1076,20 +1162,32 @@ async function joinGrupo() {
   toast('✅ Te uniste a ' + grupo.nombre);
 
   await loadGrupos();
-
 }
 
 function showInvite(grupoId, grupoNombre, codigo) {
-  document.getElementById('invite-grupo-name').textContent = grupoNombre;
-  document.getElementById('invite-code-display').textContent = codigo;
+
+  document.getElementById('invite-grupo-name').textContent =
+    grupoNombre;
+
+  document.getElementById('invite-code-display').textContent =
+    codigo;
+
   openModal('modal-invite');
 }
 
 function copiarCodigo() {
-  const codigo = document.getElementById('invite-code-display').textContent;
-  navigator.clipboard.writeText('Unite al prode del mundial con el código: ' + codigo + ' 🏆').then(() => toast('📋 Código copiado'));
-}
 
+  const codigo =
+    document.getElementById('invite-code-display').textContent;
+
+  navigator.clipboard
+    .writeText(
+      'Unite al prode del mundial con el código: ' +
+      codigo +
+      ' 🏆'
+    )
+    .then(() => toast('📋 Código copiado'));
+}
 // ══════════════════════════════════════════════
 //  ETAPAS Y PARTIDOS
 // ══════════════════════════════════════════════
