@@ -464,6 +464,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <div class="toast-admin" id="toast-admin"></div>
 
 <script>
+  console.log("SCRIPT INICIO");
 const SUPABASE_URL = window.ENV.SUPABASE_URL;
 const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
 
@@ -693,7 +694,7 @@ async function guardarResultado(partidoId) {
     loadResultadosPartidos(etapaActiva.id);
   }
 }
-
+console.log("SCRIPT MITAD");
 async function recalcPuntos(partidoId) {
 
   const { data: resultado, error } = await sb
@@ -934,6 +935,7 @@ document.getElementById('admin-pwd').addEventListener('keydown', e => { if(e.key
 console.log("🟢 SCRIPT TERMINADO");
 window.recalcPuntos = recalcPuntos;
 console.log("🟢 EXPORT:", typeof window.recalcPuntos);
+console.log("SCRIPT FINAL");
 </script>
 </body>
 </html>
