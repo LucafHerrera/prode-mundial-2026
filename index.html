@@ -630,7 +630,7 @@ body {
 const SUPABASE_URL = window.ENV.SUPABASE_URL;
 const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  
+
 // ══════════════════════════════════════════════
 //  ESTADO GLOBAL
 // ══════════════════════════════════════════════
@@ -886,19 +886,19 @@ async function loadGrupos() {
   container.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
   // Obtener grupos donde el usuario es miembro
-  const { data: memberships } = await sb.from('grupo_miembros')
-    .select('grupo_id, grupos(*)')
-    .eq('usuario_id', currentUser.id);
+  const { data, error } = await sb
+  .from('grupo_miembros')
+  .insert({
+    grupo_id: grupo.id,
+    usuario_id: usuario.id
+  });
 
-  if (!memberships || memberships.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">👥</div>
-        <div class="empty-state-title">Sin grupos todavía</div>
-        <div class="empty-state-text">Creá un grupo nuevo o ingresá con el código que te mandaron</div>
-      </div>`;
-    return;
-  }
+console.log('INSERT GRUPO_MIEMBROS', { data, error });
+
+if (error) {
+  console.error(error);
+  return toast('Error: ' + error.message);
+}
 
   container.innerHTML = '';
   for (const m of memberships) {
