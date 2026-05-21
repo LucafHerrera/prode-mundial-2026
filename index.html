@@ -420,6 +420,23 @@ body {
 /* ─── JOIN GROUP ─── */
 .join-code-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
 .join-code-section h3 { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 10px; }
+/* Ocultar barra de scroll en navegadores de PC (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ocultar barra de scroll en Firefox */
+html, body, .screen, .scroll-area {
+  scrollbar-width: none;
+}
+
+/* Forzar que el emoji seleccionado brille en amarillo intenso */
+.emoji-grid .emoji-opt.selected, 
+#avatar-emoji-grid .emoji-opt.selected {
+  border-color: #F5C842 !important; /* Usamos amarillo oro */
+  background: rgba(245, 200, 66, 0.25) !important;
+  transform: scale(1.05);
+}
 </style>
 </head>
 <body>
@@ -761,8 +778,14 @@ function buildEmojiGrid(containerId, emojis, selectedVar, onSelect) {
     const btn = document.createElement('button');
     btn.className = containerId.includes('modal') ? 'emoji-opt-modal' : 'emoji-opt';
     btn.textContent = e;
+    
+    // Si coincide con el seleccionado, le clava la clase selected
     if (e === window[selectedVar]) btn.classList.add('selected');
-    btn.onclick = () => { onSelect(e); buildEmojiGrid(containerId, emojis, selectedVar, onSelect); };
+    
+    btn.onclick = () => { 
+      onSelect(e); 
+      buildEmojiGrid(containerId, emojis, selectedVar, onSelect); 
+    };
     el.appendChild(btn);
   });
 }
