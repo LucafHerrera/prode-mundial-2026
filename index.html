@@ -556,7 +556,7 @@ body {
   </div>
 
   <!-- BOTTOM NAV (hidden initially) -->
-  <<div class="bottom-nav" id="bottom-nav" style="display:none;">
+  <div class="bottom-nav" id="bottom-nav" style="display:none;">
     <button class="nav-btn" id="nav-grupos" onclick="showMainScreen('grupos')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
       <span class="nav-label">Grupos</span>
@@ -565,16 +565,11 @@ body {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
       <span class="nav-label">Pronósticos</span>
     </button>
-    <button class="nav-btn" id="nav-tabla" onclick="showMainScreen('tabla')" style="display:none;"> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-      <span class="nav-label">Tabla</span>
-    </button>
     <button class="nav-btn" id="nav-perfil" onclick="showMainScreen('perfil')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
       <span class="nav-label">Perfil</span>
     </button>
   </div>
-
-</div>
 
 <!-- MODAL: Crear grupo -->
 <div class="modal-overlay" id="modal-crear-grupo">
@@ -625,7 +620,7 @@ body {
 
 <div class="toast" id="toast"></div>
 
-<<script>
+<script>
 // ══════════════════════════════════════════════
 //  CONFIG SUPABASE — reemplazá con tus keys
 // ══════════════════════════════════════════════
@@ -704,16 +699,24 @@ function showMainScreen(id) {
   const nb = document.getElementById('nav-'+id);
   if (nb) nb.classList.add('active');
 
-  // Control Dinámico de Visibilidad del botón Tabla
-  const navTablaBtn = document.getElementById('nav-tabla');
-  if (currentGrupo) {
-    if (navTablaBtn) navTablaBtn.style.display = 'flex';
-  } else {
-    if (navTablaBtn) navTablaBtn.style.display = 'none';
+  if (!currentGrupo) {
+    const savedGrupo = localStorage.getItem('prode_current_grupo');
+    if (savedGrupo) currentGrupo = JSON.parse(savedGrupo);
   }
 
   if (id === 'grupos') loadGrupos();
-  if (id === 'pronosticos') { buildEtapaTabs(); loadPartidos(currentEtapa); }
+  
+  if (id === 'pronosticos') { 
+    // Forzamos el título fijo global e independiente para la sección general de pronósticos
+    const pronoTitle = document.getElementById('prono-grupo-name');
+    if (pronoTitle) pronoTitle.textContent = 'PRONÓSTICOS MUNDIALES';
+    const pronoSub = document.getElementById('prono-grupo-sub');
+    if (pronoSub) pronoSub.textContent = 'Carga tus predicciones globales';
+    
+    buildEtapaTabs(); 
+    loadPartidos(currentEtapa); 
+  }
+  
   if (id === 'tabla' && currentGrupo) loadTabla();
   if (id === 'perfil') loadPerfil();
 }
@@ -839,6 +842,9 @@ function renderAvatarEl(el, user) {
   }
 }
 
+// ══════════════════════════════════════════════
+//  AFTER LOGIN
+// ══════════════════════════════════════════════
 function afterLogin() {
   document.getElementById('header-user-name').textContent = currentUser.nombre;
   renderAvatarEl(document.getElementById('header-avatar'), currentUser);
@@ -925,20 +931,13 @@ function enterGrupo(grupo) {
   currentGrupo = grupo;
   localStorage.setItem('prode_current_grupo', JSON.stringify(grupo));
 
-  document.getElementById('prono-grupo-name').textContent = grupo.nombre.toUpperCase();
   document.getElementById('tabla-grupo-name').textContent = grupo.nombre.toUpperCase();
-  
-  const navTablaBtn = document.getElementById('nav-tabla');
-  if (navTablaBtn) navTablaBtn.style.display = 'flex';
-
   showMainScreen('tabla');
 }
 
 function goBack() {
   currentGrupo = null;
   localStorage.removeItem('prode_current_grupo');
-  const navTablaBtn = document.getElementById('nav-tabla');
-  if (navTablaBtn) navTablaBtn.style.display = 'none';
   showMainScreen('grupos');
 }
 
@@ -1086,7 +1085,7 @@ async function guardarProno(partidoId) {
   }, { onConflict: 'usuario_id,partido_id' });
 
   if (error) return toast('Error: ' + error.message);
-  toast('✅ Pronóstico guardado globalmente');
+  toast('✅ Pronóstico guardado');
 }
 
 // ══════════════════════════════════════════════
@@ -1191,8 +1190,6 @@ function cerrarSesion() {
   localStorage.removeItem('prode_user_id');
   localStorage.removeItem('prode_current_grupo');
   currentUser = null; currentGrupo = null;
-  const navTablaBtn = document.getElementById('nav-tabla');
-  if (navTablaBtn) navTablaBtn.style.display = 'none';
   document.getElementById('bottom-nav').style.display = 'none';
   showScreen('login');
 }
