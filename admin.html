@@ -466,11 +466,23 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <script>
 const SUPABASE_URL = window.ENV.SUPABASE_URL;
 const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
+
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Contraseña admin simple — se cambia desde el panel o en Supabase
-const ADMIN_PWD_KEY = 'prode_admin_pwd';
-const DEFAULT_PWD = 'admin2026';
+window.addEventListener('load', () => {
+  if (sessionStorage.getItem('admin_ok') === 'true') {
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'flex';
+    loadDashboard();
+    buildEtapaTabsAdmin();
+    loadResultadosPartidos('grupos');
+    populatePartidoSelect();
+  }
+});
+function logoutAdmin() {
+  sessionStorage.removeItem('admin_ok');
+  location.reload();
+}
 
 const ETAPAS = [
   { id:'grupos', label:'Fase de Grupos' }, { id:'octavos', label:'Octavos' },
@@ -505,12 +517,26 @@ function toast(msg, ms=2500) {
   setTimeout(() => t.classList.remove('show'), ms);
 }
 
-function doAdminLogin() {
+async function doAdminLogin() {
   const pwd = document.getElementById('admin-pwd').value;
-  const stored = localStorage.getItem(ADMIN_PWD_KEY) || DEFAULT_PWD;
-  if (pwd === stored) {
+
+  const { data, error } = await sb
+    .from('admin_config')
+    .select('admin_password')
+    .eq('id', 'main')
+    .single();
+
+  if (error) {
+    toast('Error de autenticación');
+    return;
+  }
+
+  if (pwd === data.admin_password) {
+    sessionStorage.setItem('admin_ok', 'true');
+
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-app').style.display = 'flex';
+
     loadDashboard();
     buildEtapaTabsAdmin();
     loadResultadosPartidos('grupos');
@@ -519,6 +545,7 @@ function doAdminLogin() {
     toast('❌ Contraseña incorrecta');
   }
 }
+
 
 function showPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
