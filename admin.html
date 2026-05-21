@@ -923,16 +923,72 @@ async function resetResultados() {
   await sb.from('resultados').delete().neq('partido_id','__none__');
   toast('✅ Resultados reseteados');
 }
-function recalcPuntos(partidoId) {
-  console.log("recalcPuntos OK", partidoId);
-  ...
+
+// Lógica de cálculo de puntos real y definitiva
+async function recalcPuntos(partidoId) {
+  const { data: resultado, error } = await sb
+    .from('resultados')
+    .select('*')
+    .eq('partido_id', partidoId)
+    .single();
+
+  if (error || !resultado) return;
+
+  const { data: pronosticos, error: err2 } = await sb
+    .from('pronosticos')
+    .select('*')
+    .eq('partido_id', partidoId);
+
+  if (err2 || !pronosticos) return;
+
+  const gLocal = resultado.goles_local;
+  const gVisit = resultado.goles_visit;
+
+  // Averiguamos en qué etapa está el partido para saber si tiene multiplicador
+  const partidoInfo = PARTIDOS.find(p => p.id === partidoId);
+  let mult = 1;
+  
+  // Traemos la configuración de puntos del localStorage o usamos los de por defecto
+  const configLocal = localStorage.getItem('prode_config');
+  const cfg = configLocal ? JSON.parse(configLocal) : { exacto: 3, resultado: 1, multOct: 2, multQrt: 2, multSemi: 3, multFinal: 4 };
+
+  if (partidoInfo) {
+    if (partidoInfo.etapa === 'octavos') mult = parseInt(cfg.multOct);
+    if (partidoInfo.etapa === 'cuartos') mult = parseInt(cfg.multQrt);
+    if (partidoInfo.etapa === 'semifinal') mult = parseInt(cfg.multSemi);
+    if (partidoInfo.etapa === 'final') mult = parseInt(cfg.multFinal);
+  }
+
+  const ptsExacto = parseInt(cfg.exacto) * mult;
+  const ptsResultado = parseInt(cfg.resultado) * mult;
+
+  for (const p of pronosticos) {
+    let puntos = 0;
+
+    // Caso 1: Acierto Exacto
+    if (p.goles_local === gLocal && p.goles_visit === gVisit) {
+      puntos = ptsExacto;
+    } else {
+      // Caso 2: Acierto de quién gana o si empatan (Resultado)
+      const pronoRes = Math.sign(p.goles_local - p.goles_visit);
+      const realRes = Math.sign(gLocal - gVisit);
+
+      if (pronoRes === realRes) {
+        puntos = ptsResultado;
+      }
+    }
+
+    // Guardamos los puntos calculados en la fila del pronóstico del usuario
+    await sb
+      .from('pronosticos')
+      .update({ puntos: puntos })
+      .eq('id', p.id);
+  }
+
+  console.log('✅ Puntos recalculados con multiplicadores OK');
 }
 
-window.recalcPuntos = recalcPuntos;
-console.log("SCRIPT CARGADO");
-// Enter para login
-document.getElementById('admin-pwd').addEventListener('keydown', e => { if(e.key==='Enter') doAdminLogin(); });
-console.log("🟢 SCRIPT TERMINADO");
+// Registramos la función correctamente en la ventana global
 window.recalcPuntos = recalcPuntos;
 console.log("🟢 EXPORT:", typeof window.recalcPuntos);
 console.log("SCRIPT FINAL");
