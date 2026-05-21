@@ -668,7 +668,7 @@ const PARTIDOS = [
   { id:'g8', etapa:'grupos', grupo:'D', fecha:'2026-06-14', hora:'18:00', local:'🇳🇱', local_nombre:'Países Bajos', visit:'🇸🇳', visit_nombre:'Senegal', mult:1 },
   { id:'g9', etapa:'grupos', grupo:'E', fecha:'2026-06-15', hora:'15:00', local:'🇺🇾', local_nombre:'Uruguay', visit:'🇦🇺', visit_nombre:'Australia', mult:1 },
   { id:'g10', etapa:'grupos', grupo:'E', fecha:'2026-06-15', hora:'18:00', local:'🇨🇭', local_nombre:'Suiza', visit:'🇨🇷', visit_nombre:'Corea del Sur', mult:1 },
-  { id:'g11', etapa:'grupos', grupo:'F', fecha:'2026-06-16', hora:'15:00', local:'🇧🇪', local_nombre:'Bélgica', visit:'🇩🇰', visit_nombre:'Dinamarca', mult:1 },
+  { id:'g11', etapa:'grupos', grupo:'F', fecha:'2026-06-16', hora:'15:00', local:'🇧🇪', local_nombre:'Bélgica', visit:'🇩kih', visit_nombre:'Dinamarca', mult:1 },
   { id:'g12', etapa:'grupos', grupo:'F', fecha:'2026-06-16', hora:'18:00', local:'🇲🇽', local_nombre:'México', visit:'🇸🇦', visit_nombre:'Arabia Saudita', mult:1 },
   { id:'o1', etapa:'octavos', grupo:'', fecha:'2026-07-01', hora:'15:00', local:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', local_nombre:'1° Grupo A', visit:'🇦🇷', visit_nombre:'2° Grupo B', mult:2 },
   { id:'o2', etapa:'octavos', grupo:'', fecha:'2026-07-01', hora:'19:00', local:'🇧🇷', local_nombre:'1° Grupo B', visit:'🇫🇷', visit_nombre:'2° Grupo A', mult:2 },
@@ -789,18 +789,55 @@ function renderAvatarEl(el, user) {
   }
 }
 
-// Interfaz Dinámica para solicitar Clave
+// Interfaz Dinámica Corregida: Inyecta la contraseña DEBAJO de la caja de nombre
 window.addEventListener('DOMContentLoaded', () => {
-  const cardH2 = document.querySelector('.login-card h2');
-  if (cardH2) {
-    cardH2.insertAdjacentHTML('afterend', `
-      <div class="field" style="margin-top:12px;">
+  const nameField = document.querySelector('.login-card .field');
+  if (nameField) {
+    nameField.insertAdjacentHTML('afterend', `
+      <div class="field" style="margin-bottom: 16px;">
         <label>Contraseña de acceso</label>
         <input type="password" id="login-password" placeholder="Mínimo 4 caracteres" style="width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 12px 14px; color: white; font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none;">
       </div>
     `);
   }
 });
+
+// ══════════════════════════════════════════════
+//  VALIDACIÓN ULTRA REACTIVA (Delegación de eventos)
+// ══════════════════════════════════════════════
+function validarFormularioLogin() {
+  const nombreInput = document.getElementById('login-nombre');
+  const passwordInput = document.getElementById('login-password');
+  
+  const nombre = nombreInput ? nombreInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
+  
+  const formularioValido = (nombre.length >= 2 && password.length >= 4);
+  document.getElementById('btn-ingresar').disabled = !formularioValido;
+}
+
+// Escuchamos cualquier pulsación en la pantalla de login de manera global
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'login-nombre' || e.target.id === 'login-password') {
+    validarFormularioLogin();
+  }
+});
+
+// Manejo de carga de foto de perfil
+document.getElementById('photo-input')?.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    photoDataUrl = ev.target.result;
+    const prev = document.getElementById('photo-preview');
+    if (prev) { prev.src = photoDataUrl; prev.style.display = 'block'; }
+    const hint = document.getElementById('upload-hint');
+    if (hint) hint.textContent = '✓ Foto cargada — tocá para cambiar';
+  };
+  reader.readAsDataURL(file);
+});
+
 
 // ══════════════════════════════════════════════
 //  LOGIN CON CONTRASEÑA
@@ -819,18 +856,15 @@ async function doLogin() {
     let { data: existing } = await sb.from('usuarios').select('*').eq('nombre', nombre).maybeSingle();
 
     if (existing) {
-      // Si el usuario ya existe, verificamos la clave
       if (existing.password && existing.password !== password) {
         throw new Error('❌ Contraseña incorrecta para este usuario');
       }
-      // Si existía pero no tenía clave (usuarios viejos), se la registramos
       if (!existing.password) {
         await sb.from('usuarios').update({ password }).eq('id', existing.id);
         existing.password = password;
       }
       currentUser = existing;
     } else {
-      // Si es un usuario nuevo, subimos foto si corresponde y lo creamos
       let foto_url = null;
       if (avatarMode === 'foto' && photoDataUrl) {
         const file = document.getElementById('photo-input').files[0];
@@ -844,7 +878,7 @@ async function doLogin() {
       }
 
       const emoji = avatarMode === 'emoji' ? selectedEmoji : null;
-      const { data: nuevo, error } = await sb.from('usuarios').insert({ nombre, emoji, foto_url, password }).select().single();
+      const { data: nuevo, error = null } = await sb.from('usuarios').insert({ nombre, emoji, foto_url, password }).select().single();
       if (error) throw error;
       currentUser = nuevo;
     }
@@ -854,6 +888,7 @@ async function doLogin() {
   } catch(err) {
     toast(err.message);
     btn.disabled = false; btn.textContent = 'Ingresar →';
+    validarFormularioLogin();
   }
 }
 
@@ -898,12 +933,10 @@ async function loadGrupos() {
 
   container.innerHTML = '';
 
-  // Procesamos cada grupo uno por uno para armar el ranking de posiciones
   for (const m of memberships) {
     const g = m.grupos;
     if (!g) continue;
 
-    // Buscamos todos los miembros de ESTE grupo
     const { data: members } = await sb.from('grupo_miembros')
       .select('usuario_id, usuarios(nombre, emoji, foto_url)')
       .eq('grupo_id', g.id);
@@ -915,7 +948,6 @@ async function loadGrupos() {
         const u = member.usuarios;
         if (!u) continue;
 
-        // Sumamos los puntos de sus pronósticos guardados
         const { data: pronos } = await sb.from('pronosticos')
           .select('puntos')
           .eq('usuario_id', member.usuario_id)
@@ -926,17 +958,15 @@ async function loadGrupos() {
       }
     }
 
-    // Ordenamos de mayor a menor puntaje
     listaPuntos.sort((a, b) => b.pts - a.pts);
 
-    // Armamos el HTML de las 3 primeras posiciones para inyectarlo en la tarjeta
     let rankingHtml = '';
     if (listaPuntos.length > 0) {
       rankingHtml = `<div class="grupo-mini-ranking" style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border); font-size:12px; color:var(--text2);">`;
       listaPuntos.slice(0, 3).forEach((rank, index) => {
         const medallas = ['🥇', '🥈', '🥉'];
         const prefijo = index < 3 ? medallas[index] : `${index + 1}°`;
-        rankingHtml += `<div style="display:flex; justify-content:between; margin-bottom:2px;">
+        rankingHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:2px;">
           <span style="flex:1;">${prefijo} <strong>${rank.nombre}</strong></span>
           <span style="color:var(--navy); font-weight:700;">${rank.pts} pts</span>
         </div>`;
@@ -948,7 +978,6 @@ async function loadGrupos() {
     card.className = 'grupo-card';
     card.style.cssText = 'margin: 0 16px 12px; background: white; border-radius: var(--radius); border: 1.5px solid var(--border); padding: 16px; box-shadow: 0 2px 8px rgba(13,27,42,0.06); cursor: pointer;';
     
-    // Al hacer clic en cualquier parte de la tarjeta, entra al grupo
     card.onclick = () => enterGrupoById(g.id);
 
     card.innerHTML = `
@@ -995,13 +1024,6 @@ function enterGrupo(grupo) {
   }
 }
 
-function goBack() {
-  currentGrupo = null;
-  localStorage.removeItem('prode_current_grupo');
-  showMainScreen('grupos');
-  loadGrupos();
-}
-
 // ══════════════════════════════════════════════
 //  CREAR / JOIN GRUPO
 // ══════════════════════════════════════════════
@@ -1042,6 +1064,13 @@ async function joinGrupo() {
 
   closeModal('modal-join-grupo');
   toast('✅ Te uniste a ' + grupo.nombre);
+  loadGrupos();
+}
+
+function goBack() {
+  currentGrupo = null;
+  localStorage.removeItem('prode_current_grupo');
+  showMainScreen('grupos');
   loadGrupos();
 }
 
