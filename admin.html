@@ -665,6 +665,9 @@ async function guardarResultado(partidoId) {
   const { error } = await sb.from('resultados').upsert({
     partido_id: partidoId, goles_local: gLocal, goles_visit: gVisit
   }, { onConflict: 'partido_id' });
+  await sb.rpc('recalcular_puntos', {
+  p_partido_id: partido.id
+});
 
   if (error) return toast('Error: '+error.message);
 
