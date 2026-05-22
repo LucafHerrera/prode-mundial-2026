@@ -445,7 +445,7 @@ html, body, .screen, .scroll-area {
 }
 </style>
 </head>
-<body>
+<<body>
 <div id="app">
 
   <div id="screen-login" class="screen active" style="display: flex; flex-direction: column;">
@@ -585,7 +585,7 @@ html, body, .screen, .scroll-area {
         
         <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 4px;">
           <button class="btn-perfil-tab" onclick="cambiarAvatarPerfil('emoji')" style="background: var(--cream); border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; color: var(--navy); cursor: pointer;">Usar Emoji</button>
-          <button class="btn-perfil-tab" onclick="document.getElementById('perfil-photo-input').click()" style="background: var(--navy); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">Subir Foto</button>
+          <button class="btn-perfil-tab" onclick="document.getElementById('perfil-photo-input').click()" style="background: var(--navy); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; color: white; cursor: pointer;">Subir Foto</button>
         </div>
 
         <input type="file" id="perfil-photo-input" accept="image/*" style="display: none;">
@@ -660,10 +660,22 @@ html, body, .screen, .scroll-area {
     </div>
   </div>
 
+  <div class="modal-overlay" id="modal-ver-pronosticos">
+    <div class="modal-sheet" style="max-height: 80vh; display: flex; flex-direction: column;">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="margin-bottom: 4px;">PRONÓSTICOS DEL GRUPO</div>
+      <p id="vs-partido-titulo" style="font-size: 13px; color: var(--text2); font-weight: 700; text-align: center; margin-bottom: 16px; text-transform: uppercase; color: var(--gold2);"></p>
+      
+      <div id="lista-pronosticos-grupo" class="scroll-area" style="flex: 1; overflow-y: auto; padding: 4px 0;"></div>
+      
+      <button onclick="closeModal('modal-ver-pronosticos')" style="width:100%; margin-top:16px; padding: 12px; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;">Cerrar</button>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
 </div> 
-</body>>
+</body>
 <script>
 // ══════════════════════════════════════════════
 //  CONFIG SUPABASE — reemplazá con tus keys
@@ -1086,6 +1098,7 @@ async function loadPartidos(etapa) {
   cont.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
   try {
+    // 1. Traemos los partidos en vivo desde la tabla de Supabase (Fixture Real)
     const { data: partidos, error: partError } = await sb
       .from('partidos')
       .select('*')
@@ -1095,10 +1108,12 @@ async function loadPartidos(etapa) {
 
     if (partError) throw partError;
 
+    // 2. Traemos tus pronósticos cargados
     const { data: pronos } = await sb.from('pronosticos').select('*').eq('usuario_id', currentUser.id);
     const pronoMap = {};
     (pronos || []).forEach(p => { pronoMap[p.partido_id] = p; });
 
+    // 3. Traemos los resultados oficiales
     const { data: resultados } = await sb.from('resultados').select('*');
     const resMap = {};
     (resultados || []).forEach(r => { resMap[r.partido_id] = r; });
@@ -1112,6 +1127,7 @@ async function loadPartidos(etapa) {
 
     let lastGrupo = null;
     partidos.forEach(p => {
+      // Separador visual por Grupo (A al L)
       if (p.grupo && p.grupo !== lastGrupo) {
         const sep = document.createElement('div');
         sep.style.cssText = 'padding:16px 14px 6px;font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;';
@@ -1131,22 +1147,24 @@ async function loadPartidos(etapa) {
       const rVisit = resultado ? resultado.goles_visit : null;
       const pts = calcPuntos(pLocal, pVisit, rLocal, rVisit, mult);
 
-      // --- CÁLCULO VISUAL DE CHIPS Y PUNTOS CON PREMIO NUMÉRICO ---
       let chipHtml = '';
       if (resultado) {
-        if (pts === 3 * mult) {
-          chipHtml = `<span class="pts-chip pts-exacto">✓ Exacto (+${pts})</span>`;
-        } else if (pts === 1 * mult) {
-          chipHtml = `<span class="pts-chip pts-resultado">~ Resultado (+${pts})</span>`;
-        } else {
-          chipHtml = `<span class="pts-chip pts-fallo">✗ Fallado (+0)</span>`;
-        }
+        if (pts === 3 * mult) chipHtml = `<span class="pts-chip pts-exacto">✓ Exacto (+${pts})</span>`;
+        else if (pts === 1 * mult) chipHtml = `<span class="pts-chip pts-resultado">~ Resultado (+${pts})</span>`;
+        else chipHtml = `<span class="pts-chip pts-fallo">✗ Fallado (+0)</span>`;
       } else {
         chipHtml = closed ? `<span class="pts-chip pts-cerrado">⏱ Cerrado</span>` : `<span class="pts-chip pts-pendiente">Pendiente</span>`;
       }
 
       const card = document.createElement('div');
       card.className = 'partido-item';
+      
+      // HABILITAMOS EL CLIC PARA ESPIAR: Solo si el partido ya cerró o tiene resultado real
+      if (closed || resultado) {
+        card.style.cursor = 'pointer';
+        card.onclick = () => abrirEspiarPronosticos(p.id, p.local_nombre, p.visit_nombre);
+      }
+
       card.innerHTML = `
         <div class="partido-meta"><span class="partido-meta-left">${formatFechaArg(p.fecha, p.hora)}</span></div>
         <div class="partido-content">
@@ -1415,6 +1433,81 @@ function cerrarSesion() {
   const loggedIn = await tryAutoLogin();
   if (!loggedIn) showScreen('login');
 })();
+async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
+  document.getElementById('vs-partido-titulo').textContent = `${localNombre} vs ${visitNombre}`;
+  
+  const contenedor = document.getElementById('lista-pronosticos-grupo');
+  contenedor.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
+  
+  openModal('modal-ver-pronosticos');
+
+  // Si no está parado dentro de un grupo, frena y avisa
+  if (!currentGrupo) {
+    contenedor.innerHTML = '<p style="color:var(--text3); text-align:center; padding:20px; font-size:13px;">Entrá primero a la sección de Tabla desde un Grupo para ver qué votaron tus amigos.</p>';
+    return;
+  }
+
+  try {
+    // 1. Traemos los miembros del grupo actual con sus perfiles
+    const { data: miembros, error: errM } = await sb
+      .from('grupo_miembros')
+      .select('usuario_id, usuarios(*)')
+      .eq('grupo_id', currentGrupo.id);
+
+    if (errM) throw errM;
+
+    // 2. Traemos todos los pronósticos existentes para este partido concreto usando tus nombres exactos
+    const { data: pronos, error: errP } = await sb
+      .from('pronosticos')
+      .select('*')
+      .eq('partido_id', partidoId);
+
+    if (errP) throw errP;
+
+    const pronoMap = {};
+    (pronos || []).forEach(pr => { pronoMap[pr.usuario_id] = pr; });
+
+    contenedor.innerHTML = '';
+
+    // 3. Cruzamos miembros con pronósticos
+    miembros.forEach(m => {
+      const u = m.usuarios;
+      if (!u) return;
+
+      const userProno = pronoMap[u.id];
+      
+      const avatarHtml = u.foto_url 
+        ? `<img src="${u.foto_url}" style="width:32px; height:32px; border-radius:50%; object-fit:cover; border:1px solid var(--border);">` 
+        : `<span style="font-size:20px;">${u.emoji || '⚽'}</span>`;
+
+      let marcadorHtml = `<span style="font-size:13px; font-weight:700; color:var(--text3); background:var(--cream2); padding:4px 8px; border-radius:6px;">No jugó</span>`;
+      if (userProno) {
+        marcadorHtml = `<span style="font-size:15px; font-weight:800; color:var(--navy); background:var(--cream); border:1.5px solid var(--border); padding:4px 10px; border-radius:8px; letter-spacing:1px;">${userProno.goles_local}:${userProno.goles_visit}</span>`;
+      }
+
+      const fila = document.createElement('div');
+      fila.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:1px solid rgba(0,0,0,0.05); box-sizing:border-box;';
+      
+      if (u.id === currentUser.id) {
+        fila.style.background = 'rgba(245,200,66,0.08)';
+        fila.style.borderRadius = '8px';
+      }
+
+      fila.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:32px; height:32px; display:flex; align-items:center; justify-content:center;">${avatarHtml}</div>
+          <div style="font-size:14px; font-weight:700; color:var(--navy);">${u.nombre} ${u.id === currentUser.id ? '<span style="font-size:11px; color:var(--text3); font-weight:400;">(Vos)</span>' : ''}</div>
+        </div>
+        <div>${marcadorHtml}</div>
+      `;
+      contenedor.appendChild(fila);
+    });
+
+  } catch (err) {
+    console.error(err);
+    contenedor.innerHTML = '<p style="color:var(--red); text-align:center; padding:20px;">Error al espiar los pronósticos.</p>';
+  }
+}
 </script>
 </body>
 </html>
