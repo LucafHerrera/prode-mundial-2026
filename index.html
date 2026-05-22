@@ -1441,14 +1441,78 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
   
   openModal('modal-ver-pronosticos');
 
-  // Si no está parado dentro de un grupo, frena y avisa
+  // ═══════════════════════════════════════════════════════════════
+  // MODAL INTELIGENTE: Si no está parado dentro de un grupo...
+  // ═══════════════════════════════════════════════════════════════
   if (!currentGrupo) {
-    contenedor.innerHTML = '<p style="color:var(--text3); text-align:center; padding:20px; font-size:13px;">Entrá primero a la sección de Tabla desde un Grupo para ver qué votaron tus amigos.</p>';
-    return;
+    try {
+      // 1. Buscamos los grupos a los que pertenece el usuario actual
+      const { data: memberships, error } = await sb
+        .from('grupo_miembros')
+        .select(`grupo_id, grupos (*)`)
+        .eq('usuario_id', currentUser.id);
+
+      if (error) throw error;
+
+      // CONDICIÓN: Si no pertenece a NINGÚN grupo todavía
+      if (!memberships || memberships.length === 0) {
+        contenedor.innerHTML = `
+          <div style="text-align:center; padding:24px 16px;">
+            <p style="color:var(--text2); font-size:14px; margin-bottom:14px; font-weight:500;">⚠️ Todavía no te sumaste a ningún grupo.</p>
+            <p style="color:var(--text3); font-size:12px; margin-bottom:16px;">Creá uno o unite con código desde la pestaña de Grupos para competir con tus amigos.</p>
+          </div>`;
+        return;
+      }
+
+      // CONDICIÓN: Si pertenece a grupos, le listamos las opciones táctiles
+      contenedor.innerHTML = `
+        <div style="padding:10px 14px;">
+          <p style="color:var(--text3); font-size:12px; font-weight:700; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px; text-align:center;">Seleccioná un grupo para espiar:</p>
+          <div id="lista-select-grupos-espiar" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>`;
+      
+      const listaCont = document.getElementById('lista-select-grupos-espiar');
+
+      memberships.forEach(m => {
+        const g = m.grupos;
+        if (!g) return;
+
+        const btnGrupo = document.createElement('button');
+        btnGrupo.style.cssText = 'display:flex; align-items:center; gap:12px; width:100%; padding:12px; background:white; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; text-align:left; font-family:"DM Sans",sans-serif; transition:all 0.15s;';
+        
+        // Efecto hover/active simple por JS
+        btnGrupo.onmousedown = () => btnGrupo.style.background = 'var(--cream)';
+        btnGrupo.onmouseup = () => btnGrupo.style.background = 'white';
+
+        btnGrupo.innerHTML = `
+          <span style="font-size:20px;">${g.emoji || '🏆'}</span>
+          <span style="font-size:14px; font-weight:700; color:var(--navy); flex:1;">${g.nombre}</span>
+          <span style="font-size:14px; color:var(--text3);">→</span>
+        `;
+
+        // Al hacer clic, seteamos ese grupo como el actual y relanzamos la función inmediatamente
+        btnGrupo.onclick = () => {
+          currentGrupo = g;
+          localStorage.setItem('prode_current_grupo', JSON.stringify(g));
+          document.getElementById('tabla-grupo-name').textContent = g.nombre.toUpperCase(); // Sincroniza la pestaña Tabla
+          abrirEspiarPronosticos(partidoId, localNombre, visitNombre); // Recarga el modal con los datos del grupo elegido
+        };
+
+        listaCont.appendChild(btnGrupo);
+      });
+
+      return; // Frenamos la ejecución acá para que elija el grupo
+    } catch (err) {
+      console.error(err);
+      contenedor.innerHTML = '<p style="color:var(--red); text-align:center; padding:20px;">Error al cargar tus grupos.</p>';
+      return;
+    }
   }
 
+  // ═══════════════════════════════════════════════════════════════
+  // LOGICA NORMAL: Si ya hay un grupo seleccionado, trae los pronósticos
+  // ═══════════════════════════════════════════════════════════════
   try {
-    // 1. Traemos los miembros del grupo actual con sus perfiles
     const { data: miembros, error: errM } = await sb
       .from('grupo_miembros')
       .select('usuario_id, usuarios(*)')
@@ -1456,7 +1520,6 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
 
     if (errM) throw errM;
 
-    // 2. Traemos todos los pronósticos existentes para este partido concreto usando tus nombres exactos
     const { data: pronos, error: errP } = await sb
       .from('pronosticos')
       .select('*')
@@ -1469,7 +1532,6 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
 
     contenedor.innerHTML = '';
 
-    // 3. Cruzamos miembros con pronósticos
     miembros.forEach(m => {
       const u = m.usuarios;
       if (!u) return;
