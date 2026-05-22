@@ -660,10 +660,10 @@ let currentEtapa = 'grupos';
 let avatarMode = 'emoji';
 let selectedEmoji = '⚽';
 let selectedGrupoEmoji = '🏆';
-let photoDataUrl = null;
+let photoFileToUpload = null; // Guardamos el archivo real de la foto en memoria global
 
 // ══════════════════════════════════════════════
-//  DATOS LOCALES (partidos del mundial 2026)
+//  DATOS LOCALES 
 // ══════════════════════════════════════════════
 const EMOJIS_AVATAR = ['⚽','🏆','🦁','🦅','🐯','🦊','🐬','🌟','🔥','💪','🎯','⚡','🏅','🎪','👑','🚀','🎲'];
 const EMOJIS_GRUPO = ['🏆','⚽','🎯','🔥','💪','👥','🎪','🌟','⚡','🎲','🦁','🏅'];
@@ -675,25 +675,6 @@ const ETAPAS = [
   { id:'semifinal', label:'Semifinal', mult:3 },
   { id:'tercero', label:'3er Puesto', mult:2 },
   { id:'final', label:'Final', mult:4 },
-];
-
-const PARTIDOS = [
-  { id:'g1', etapa:'grupos', grupo:'A', fecha:'2026-06-11', hora:'18:00', local:'🇲🇽', local_nombre:'México', visit:'🇨🇦', visit_nombre:'Canadá', mult:1 },
-  { id:'g2', etapa:'grupos', group:'A', fecha:'2026-06-11', hora:'21:00', local:'🇺🇸', local_nombre:'Estados Unidos', visit:'🇷🇸', visit_nombre:'Serbia', mult:1 },
-  { id:'g3', etapa:'grupos', grupo:'B', fecha:'2026-06-12', hora:'15:00', local:'🇦🇷', local_nombre:'Argentina', visit:'🇳🇬', visit_nombre:'Nigeria', mult:1 },
-  { id:'g4', etapa:'grupos', grupo:'B', fecha:'2026-06-12', hora:'18:00', local:'🇧🇷', local_nombre:'Brasil', visit:'🇩🇪', visit_nombre:'Alemania', mult:1 },
-  { id:'g5', etapa:'grupos', grupo:'C', fecha:'2026-06-13', hora:'15:00', local:'🇫🇷', local_nombre:'Francia', visit:'🇲🇦', visit_nombre:'Marruecos', mult:1 },
-  { id:'g6', etapa:'grupos', grupo:'C', fecha:'2026-06-13', hora:'18:00', local:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', local_nombre:'Inglaterra', visit:'🇵🇹', visit_nombre:'Portugal', mult:1 },
-  { id:'g7', etapa:'grupos', grupo:'D', fecha:'2026-06-14', hora:'15:00', local:'🇪🇸', local_nombre:'España', visit:'🇯🇵', visit_nombre:'Japón', mult:1 },
-  { id:'g8', etapa:'grupos', grupo:'D', fecha:'2026-06-14', hora:'18:00', local:'🇳🇱', local_nombre:'Países Bajos', visit:'🇸🇳', visit_nombre:'Senegal', mult:1 },
-  { id:'g9', etapa:'grupos', grupo:'E', fecha:'2026-06-15', hora:'15:00', local:'🇺🇾', local_nombre:'Uruguay', visit:'🇦🇺', visit_nombre:'Australia', mult:1 },
-  { id:'g10', etapa:'grupos', grupo:'E', fecha:'2026-06-15', hora:'18:00', local:'🇨🇭', local_nombre:'Suiza', visit:'🇨🇷', visit_nombre:'Corea del Sur', mult:1 },
-  { id:'g11', etapa:'grupos', grupo:'F', fecha:'2026-06-16', hora:'15:00', local:'🇧🇪', local_nombre:'Bélgica', visit:'🇩🇰', visit_nombre:'Dinamarca', mult:1 },
-  { id:'g12', etapa:'grupos', grupo:'F', fecha:'2026-06-16', hora:'18:00', local:'🇲🇽', local_nombre:'México', visit:'🇸🇦', visit_nombre:'Arabia Saudita', mult:1 },
-  { id:'o1', etapa:'octavos', grupo:'', fecha:'2026-07-01', hora:'15:00', local:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', local_nombre:'1° Grupo A', visit:'🇦🇷', visit_nombre:'2° Grupo B', mult:2 },
-  { id:'o2', etapa:'octavos', grupo:'', fecha:'2026-07-01', hora:'19:00', local:'🇧🇷', local_nombre:'1° Grupo B', visit:'🇫🇷', visit_nombre:'2° Grupo A', mult:2 },
-  { id:'o3', etapa:'octavos', grupo:'', fecha:'2026-07-02', hora:'15:00', local:'🇪🇸', local_nombre:'1° Grupo C', visit:'🇩🇪', visit_nombre:'2° Grupo D', mult:2 },
-  { id:'o4', etapa:'octavos', grupo:'', fecha:'2026-07-02', hora:'19:00', local:'🇺🇸', local_nombre:'1° Grupo D', visit:'🇳🇱', visit_nombre:'2° Grupo C', mult:2 },
 ];
 
 // ══════════════════════════════════════════════
@@ -730,7 +711,6 @@ function showMainScreen(id) {
   if (id === 'grupos') loadGrupos();
   
   if (id === 'pronosticos') { 
-    // Forzamos el título fijo global e independiente para la sección general de pronósticos
     const pronoTitle = document.getElementById('prono-grupo-name');
     if (pronoTitle) pronoTitle.textContent = 'PRONÓSTICOS MUNDIALES';
     const pronoSub = document.getElementById('prono-grupo-sub');
@@ -748,10 +728,10 @@ function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 function isClosed(fechaStr, horaStr) {
-  const [y,m,dia] = fechaStr.split('-').map(Number);
-  const [h,min] = horaStr.split(':').map(Number);
-  const matchDate = new Date(y, m-1, dia, h, min);
-  matchDate.setMinutes(matchDate.getMinutes() - 60);
+  const [y, m, dia] = fechaStr.split('-').map(Number);
+  const [h, min] = horaStr.split(':').map(Number);
+  const matchDate = new Date(y, m - 1, dia, h, min);
+  matchDate.setMinutes(matchDate.getMinutes() - 60); // Cierre de seguridad 1h antes
   const now = new Date();
   return now >= matchDate;
 }
@@ -777,27 +757,26 @@ function calcPuntos(pLocal, pVisit, rLocal, rVisit, mult) {
 // ══════════════════════════════════════════════
 //  AVATAR
 // ══════════════════════════════════════════════
-// Función para armar grillas de emojis (Login y Modal Grupos)
 function buildEmojiGrid(containerId, emojis, selectedVar, onSelect) {
   const el = document.getElementById(containerId);
   if (!el) return;
   el.innerHTML = '';
   
-  // Obtenemos el valor actual del emoji seleccionado de forma segura
-  const currentSelected = typeof window[selectedVar] !== 'undefined' ? window[selectedVar] : selectedEmoji;
+  let currentSelected = selectedEmoji;
+  if (containerId.includes('grupo')) {
+    currentSelected = selectedGrupoEmoji;
+  }
 
   emojis.forEach(e => {
     const btn = document.createElement('button');
-    // Si el contenedor es el del modal de grupos, usa otra clase
     btn.className = containerId.includes('modal') ? 'emoji-opt-modal' : 'emoji-opt';
     btn.textContent = e;
     
-    // CORRECCIÓN CLAVE: Compara el emoji actual con el seleccionado para ponerle la clase
     if (e === currentSelected) btn.classList.add('selected');
     
     btn.onclick = () => { 
-      onSelect(e); // Guarda el nuevo emoji seleccionado
-      buildEmojiGrid(containerId, emojis, selectedVar, onSelect); // Vuelve a dibujar para mover el borde amarillo
+      onSelect(e); 
+      buildEmojiGrid(containerId, emojis, selectedVar, onSelect); 
     };
     el.appendChild(btn);
   });
@@ -809,6 +788,35 @@ function switchAvatarTab(mode) {
   document.getElementById('avatar-emoji-grid').style.display = mode==='emoji' ? 'grid' : 'none';
   document.getElementById('avatar-foto-area').classList.toggle('active-tab', mode==='foto');
 }
+
+function renderAvatarEl(el, user) {
+  if (!el || !user) return;
+  if (user.foto_url) {
+    el.innerHTML = `<img src="${user.foto_url}" style="width:100%;height:100%;object-fit:cover;">`;
+  } else {
+    el.textContent = user.emoji || '⚽';
+  }
+}
+
+// Escuchador dinámico de subida de fotos (Previsualización local reactiva)
+document.getElementById('photo-input')?.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  photoFileToUpload = file; 
+
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const prev = document.getElementById('photo-preview');
+    if (prev) { 
+      prev.src = ev.target.result; 
+      prev.style.display = 'block'; 
+    }
+    const hint = document.getElementById('upload-hint');
+    if (hint) hint.textContent = '✓ Foto cargada — tocá para cambiar';
+  };
+  reader.readAsDataURL(file);
+});
 
 // ══════════════════════════════════════════════
 //  VALIDACIÓN REACTIVA DEL LOGIN
@@ -828,7 +836,7 @@ document.addEventListener('input', (e) => {
 });
 
 // ══════════════════════════════════════════════
-//  LOGIN CON CONTRASEÑA
+//  LOGIN CON STORAGE DE FOTO Y SEGURIDAD
 // ══════════════════════════════════════════════
 async function doLogin() {
   const nombre = document.getElementById('login-nombre').value.trim();
@@ -841,23 +849,51 @@ async function doLogin() {
 
   try {
     let { data: existing } = await sb.from('usuarios').select('*').eq('nombre', nombre).maybeSingle();
+    let finalUser = null;
 
     if (existing) {
       if (existing.password && existing.password !== password) throw new Error('❌ Contraseña incorrecta');
-      if (!existing.password) await sb.from('usuarios').update({ password }).eq('id', existing.id);
-      currentUser = existing;
+      if (!existing.password) {
+        await sb.from('usuarios').update({ password }).eq('id', existing.id);
+        existing.password = password;
+      }
+      finalUser = existing;
     } else {
-      const emoji = avatarMode === 'emoji' ? selectedEmoji : null;
-      const { data: nuevo, error } = await sb.from('usuarios').insert({ nombre, emoji, password }).select().single();
+      let foto_url = null;
+      let emoji = null;
+
+      if (avatarMode === 'foto' && photoFileToUpload) {
+        if (btn) btn.textContent = 'Subiendo foto...';
+        
+        const ext = photoFileToUpload.name.split('.').pop();
+        const filename = `avatars/${Date.now()}-${nombre.toLowerCase().replace(/\s/g, '_')}.${ext}`;
+        
+        const { error: upErr } = await sb.storage.from('prode').upload(filename, photoFileToUpload, {
+          cacheControl: '3600',
+          upsert: false
+        });
+        
+        if (upErr) throw new Error('❌ Error al subir foto: ' + upErr.message);
+
+        const { data: publicData } = sb.storage.from('prode').getPublicUrl(filename);
+        foto_url = publicData.publicUrl;
+      } else {
+        emoji = selectedEmoji;
+      }
+
+      if (btn) btn.textContent = 'Creando perfil...';
+      const { data: nuevo, error } = await sb.from('usuarios').insert({ nombre, emoji, foto_url, password }).select().single();
       if (error) throw error;
-      currentUser = nuevo;
+      finalUser = nuevo;
     }
 
+    currentUser = finalUser;
     localStorage.setItem('prode_user_id', currentUser.id);
     afterLogin();
   } catch(err) {
     toast(err.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Ingresar →'; }
+    validarFormularioLogin(); 
   }
 }
 
@@ -867,15 +903,6 @@ async function tryAutoLogin() {
   const { data } = await sb.from('usuarios').select('*').eq('id', uid).single();
   if (data) { currentUser = data; afterLogin(); return true; }
   return false;
-}
-
-function renderAvatarEl(el, user) {
-  if (!el || !user) return;
-  if (user.foto_url) {
-    el.innerHTML = `<img src="${user.foto_url}" style="width:100%;height:100%;object-fit:cover;">`;
-  } else {
-    el.textContent = user.emoji || '⚽';
-  }
 }
 
 // ══════════════════════════════════════════════
@@ -1031,22 +1058,13 @@ function buildEtapaTabs() {
     cont.appendChild(btn);
   });
 }
-// Función auxiliar para convertir códigos de país en emojis de banderas
-function getFlagEmoji(countryCode) {
-  if (!countryCode || countryCode.length < 2) return '⚽';
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
-}
+
 async function loadPartidos(etapa) {
   const cont = document.getElementById('partidos-list');
   if (!cont) return;
   cont.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
   try {
-    // 1. Traemos los partidos en vivo desde la tabla de Supabase (Fixture Real)
     const { data: partidos, error: partError } = await sb
       .from('partidos')
       .select('*')
@@ -1056,12 +1074,10 @@ async function loadPartidos(etapa) {
 
     if (partError) throw partError;
 
-    // 2. Traemos tus pronósticos cargados
     const { data: pronos } = await sb.from('pronosticos').select('*').eq('usuario_id', currentUser.id);
     const pronoMap = {};
     (pronos || []).forEach(p => { pronoMap[p.partido_id] = p; });
 
-    // 3. Traemos los resultados oficiales
     const { data: resultados } = await sb.from('resultados').select('*');
     const resMap = {};
     (resultados || []).forEach(r => { resMap[r.partido_id] = r; });
@@ -1075,7 +1091,6 @@ async function loadPartidos(etapa) {
 
     let lastGrupo = null;
     partidos.forEach(p => {
-      // Separador visual por Grupo (A al L)
       if (p.grupo && p.grupo !== lastGrupo) {
         const sep = document.createElement('div');
         sep.style.cssText = 'padding:16px 14px 6px;font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;';
@@ -1089,8 +1104,8 @@ async function loadPartidos(etapa) {
       const closed = isClosed(p.fecha, p.hora);
       const mult = p.mult || 1;
 
-      const pLocal = prono ? p.goles_local : null;
-      const pVisit = prono ? p.goles_visit : null;
+      const pLocal = prono ? prono.goles_local : null;
+      const pVisit = prono ? prono.goles_visit : null;
       const rLocal = resultado ? resultado.goles_local : null;
       const rVisit = resultado ? resultado.goles_visit : null;
       const pts = calcPuntos(pLocal, pVisit, rLocal, rVisit, mult);
@@ -1134,24 +1149,45 @@ async function loadPartidos(etapa) {
 }
 
 async function guardarProno(partidoId) {
-  const l = document.getElementById('score-l-'+partidoId).value;
-  const r = document.getElementById('score-r-'+partidoId).value;
-  if (l === '' || r === '') return toast('Ingresá los marcadores');
+  const l = document.getElementById('score-l-' + partidoId).value;
+  const r = document.getElementById('score-r-' + partidoId).value;
+  
+  if (l === '' || r === '') return toast('⚠️ Ingresá los marcadores antes de guardar');
 
-  const { error } = await sb.from('pronosticos').upsert({
-    usuario_id: currentUser.id,
-    partido_id: partidoId,
-    goles_local: parseInt(l),
-    goles_visit: parseInt(r),
-    puntos: 0
-  }, { onConflict: 'usuario_id,partido_id' });
+  // PROTECCIÓN REAL DESDE LA INTERFAZ: Valida que no intenten forzar partidos bloqueados
+  const inputs = document.getElementById('score-l-' + partidoId);
+  if (inputs && inputs.classList.contains('locked')) {
+    return toast('🛑 ¡Pillo! El pronóstico para este partido ya está cerrado.');
+  }
 
-  if (error) return toast('Error: ' + error.message);
-  toast('✅ Pronóstico guardado');
+  const gLocal = parseInt(l);
+  const gVisit = parseInt(r);
+
+  const btn = event.target; 
+  if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+  try {
+    const { error } = await sb.from('pronosticos').upsert({
+      usuario_id: currentUser.id,
+      partido_id: partidoId,
+      goles_local: gLocal,
+      goles_visit: gVisit,
+      puntos: 0
+    }, { onConflict: 'usuario_id,partido_id' });
+
+    if (error) throw error;
+    
+    toast('✅ Pronóstico guardado');
+  } catch (err) {
+    console.error(err);
+    toast('❌ Error al guardar: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Guardar'; }
+  }
 }
 
 // ══════════════════════════════════════════════
-//  TABLA DE POSICIONES CON TENDENCIAS
+//  TABLA DE POSICIONES CON TENDENCIAS NUMÉRICAS
 // ══════════════════════════════════════════════
 async function loadTabla() {
   const cont = document.getElementById('ranking-list');
@@ -1170,7 +1206,12 @@ async function loadTabla() {
 
     let ptsAnteriores = ptsTotales;
     if (pronos && pronos.length > 0) {
-      const ultimoProno = [...pronos].sort((a,b) => b.partido_id.localeCompare(a.partido_id))[0];
+      // Ordenamiento numérico real basado en los IDs 'p1', 'p2', etc. de Supabase
+      const ultimoProno = [...pronos].sort((a, b) => {
+        const numA = parseInt(a.partido_id.replace('p', '')) || 0;
+        const numB = parseInt(b.partido_id.replace('p', '')) || 0;
+        return numB - numA; 
+      })[0];
       ptsAnteriores = ptsTotales - (ultimoProno.puntos || 0);
     }
 
