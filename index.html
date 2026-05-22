@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -42,7 +42,7 @@ body {
 .screen.active { display: flex; flex-direction: column; }
 .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
 
-/* ─── BOTTOM NAV (CORREGIDO SIN CORTES) ─── */
+/* ─── BOTTOM NAV ─── */
 .bottom-nav {
   display: flex; background: var(--navy); height: 64px;
   border-top: 1px solid rgba(255,255,255,0.08);
@@ -69,7 +69,7 @@ body {
 .app-header-title { font-family: 'Bebas Neue', sans-serif; font-size: 22px; color: var(--gold); letter-spacing: 1px; }
 .app-header-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 1px; }
 
-/* ─── LOGIN ─── */
+/* ─── LOGIN (ESTÉTICA MEJORADA CON MESSI) ─── */
 #screen-login {
   background: var(--navy);
   display: flex; flex-direction: column;
@@ -77,13 +77,39 @@ body {
   padding: 32px 24px;
   gap: 0;
 }
+.login-header-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 360px;
+  margin-bottom: 12px;
+  gap: 16px;
+}
 .login-logo {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 52px; color: var(--gold);
-  letter-spacing: 3px; line-height: 1;
-  text-align: center;
+  font-size: 46px; 
+  color: var(--gold);
+  letter-spacing: 2px; 
+  line-height: 1.05;
+  text-align: left;
 }
-.login-sub { color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 6px; margin-bottom: 40px; text-align: center; }
+.login-avatar-img {
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  background: var(--navy2);
+  border: 3.5px solid var(--white);
+  border-radius: 18px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.login-sub { 
+  color: rgba(255,255,255,0.5); 
+  font-size: 13px; 
+  margin-bottom: 32px; 
+  text-align: center;
+  width: 100%;
+}
 .login-card {
   background: var(--navy2); border-radius: var(--radius);
   padding: 24px; width: 100%;
@@ -117,7 +143,7 @@ body {
   border: 2px solid transparent; font-size: 22px; cursor: pointer;
   display: flex; align-items: center; justify-content: center; transition: all 0.12s;
 }
-.emoji-opt.selected { border-color: var(--gold); background: rgba(245,200,66,0.15); }
+.emoji-opt.selected { border-color: var(--gold); background: rgba(245, 200, 66, 0.25); }
 .photo-upload-area {
   border: 2px dashed rgba(255,255,255,0.15); border-radius: var(--radius);
   padding: 24px; text-align: center; cursor: pointer; transition: all 0.15s;
@@ -391,7 +417,12 @@ html, body, .screen, .scroll-area { scrollbar-width: none; }
 <div id="app">
 
   <div id="screen-login" class="screen active" style="display: flex; flex-direction: column;">
-    <div class="login-logo">PRODE<br>MUNDIAL<br>2026</div>
+    
+    <div class="login-header-wrap">
+      <div class="login-logo">PRODE<br>MUNDIAL<br>2026</div>
+      <img src="https://images.vrm.museum/2026/05/22/image_440e62.png" class="login-avatar-img" alt="Messi Emblema">
+    </div>
+    
     <div class="login-sub">Competí con tus amigos 🏆</div>
 
     <div class="login-card">
@@ -624,7 +655,7 @@ html, body, .screen, .scroll-area { scrollbar-width: none; }
 
 <script>
 // ══════════════════════════════════════════════
-//  CONFIG SUPABASE — reemplazá con tus keys
+//  CONFIG SUPABASE
 // ══════════════════════════════════════════════
 const SUPABASE_URL = window.ENV.SUPABASE_URL;
 const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
@@ -640,7 +671,7 @@ let avatarMode = 'emoji';
 let selectedEmoji = '⚽';
 let selectedGrupoEmoji = '🏆';
 let photoFileToUpload = null; 
-let filtroEstadoActual = 'todos'; // Estado para filtrar partidos por cargar
+let filtroEstadoActual = 'todos';
 
 // ══════════════════════════════════════════════
 //  DATOS LOCALES 
@@ -782,11 +813,16 @@ function buildEmojiGrid(containerId, emojis, selectedVar, onSelect) {
   });
 }
 
+// Corregido bug visual que causaba fallos al alternar pestañas de avatar
 function switchAvatarTab(mode) {
   avatarMode = mode;
-  document.querySelectorAll('.avatar-tab-btn').forEach((b,i) => b.classList.toggle('toggle', (i===0&&mode==='emoji')||(i===1&&mode==='foto')));
-  document.getElementById('avatar-emoji-grid').style.display = mode==='emoji' ? 'grid' : 'none';
-  document.getElementById('avatar-foto-area').classList.toggle('active-tab', mode==='foto');
+  document.querySelectorAll('.avatar-tab-btn').forEach((b) => {
+    const isEmojiTab = b.getAttribute('onclick').includes('emoji');
+    b.classList.toggle('active', (isEmojiTab && mode === 'emoji') || (!isEmojiTab && mode === 'foto'));
+  });
+  document.getElementById('avatar-emoji-grid').style.display = mode === 'emoji' ? 'grid' : 'none';
+  document.getElementById('avatar-foto-area').style.display = mode === 'foto' ? 'block' : 'none';
+  document.getElementById('avatar-foto-area').classList.toggle('active-tab', mode === 'foto');
 }
 
 function renderAvatarEl(el, user) {
@@ -794,6 +830,7 @@ function renderAvatarEl(el, user) {
   if (user.foto_url) {
     el.innerHTML = `<img src="${user.foto_url}" style="width:100%;height:100%;object-fit:cover;">`;
   } else {
+    el.innerHTML = '';
     el.textContent = user.emoji || '⚽';
   }
 }
@@ -904,9 +941,6 @@ async function tryAutoLogin() {
   return false;
 }
 
-// ══════════════════════════════════════════════
-//  AFTER LOGIN (AHORA MANDA DIRECTO A PRONÓSTICOS)
-// ══════════════════════════════════════════════
 function afterLogin() {
   document.getElementById('header-user-name').textContent = currentUser.nombre;
   renderAvatarEl(document.getElementById('header-avatar'), currentUser);
@@ -992,7 +1026,6 @@ async function enterGrupoById(grupoId) {
 function enterGrupo(grupo) {
   currentGrupo = grupo;
   localStorage.setItem('prode_current_grupo', JSON.stringify(grupo));
-
   document.getElementById('tabla-grupo-name').textContent = grupo.nombre.toUpperCase();
   showMainScreen('tabla');
 }
@@ -1039,7 +1072,7 @@ async function joinGrupo() {
 }
 
 // ══════════════════════════════════════════════
-//  PRONÓSTICOS (FONDO GRIS EN BLOQUEADOS + FILTROS)
+//  PRONÓSTICOS (BLOQUEADOS EN GRIS + FILTROS)
 // ══════════════════════════════════════════════
 function buildEtapaTabs() {
   const cont = document.getElementById('etapa-tabs');
@@ -1094,12 +1127,10 @@ async function loadPartidos(etapa) {
       const resultado = resMap[p.id];
       const closed = isClosed(p.fecha, p.hora);
 
-      // FILTRO REACTIVO: Si está activado "pendientes" y ya cerró o finalizó, lo removemos
       if (filtroEstadoActual === 'pendientes' && (closed || resultado)) {
         return;
       }
 
-      // Separador visual por Grupo (A al L)
       if (p.grupo && p.grupo !== lastGrupo) {
         const sep = document.createElement('div');
         sep.style.cssText = 'padding:16px 14px 6px;font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;';
@@ -1127,7 +1158,6 @@ async function loadPartidos(etapa) {
       const card = document.createElement('div');
       card.className = 'partido-item';
       
-      // CAMBIO DE COLOR E INHIBICIÓN SI ESTÁ BLOQUEADO
       if (closed || resultado) {
         card.style.cssText = 'background: #f4f5f7 !important; border-color: rgba(0,0,0,0.06); cursor: pointer;';
         card.onclick = () => abrirEspiarPronosticos(p.id, p.local_nombre, p.visit_nombre);
@@ -1187,7 +1217,6 @@ async function guardarProno(partidoId) {
     }, { onConflict: 'usuario_id,partido_id' });
 
     if (error) throw error;
-    
     toast('✅ Pronóstico guardado');
   } catch (err) {
     console.error(err);
@@ -1198,7 +1227,7 @@ async function guardarProno(partidoId) {
 }
 
 // ══════════════════════════════════════════════
-//  TABLA DE POSICIONES CON TENDENCIAS NUMÉRICAS
+//  TABLA DE POSICIONES
 // ══════════════════════════════════════════════
 async function loadTabla() {
   const cont = document.getElementById('ranking-list');
@@ -1231,7 +1260,7 @@ async function loadTabla() {
   const rankingPrevio = [...resultados].sort((a,b) => b.ptsPrev - a.ptsPrev);
   resultados.sort((a,b) => b.pts - a.pts || b.exactos - a.exactos);
 
-  // CORREGIDO ERROR DE TIPEO 'Fly ='
+  // Limpiado error de asignación fantasma 'Fly ='
   const myRank = resultados.findIndex(r => r.usuario.id === currentUser.id);
   const myData = resultados[myRank];
   const myAvatarEl = document.getElementById('tabla-my-avatar');
@@ -1383,7 +1412,7 @@ function cerrarSesion() {
 }
 
 // ══════════════════════════════════════════════
-//  ESPIAR PRONÓSTICOS INTERNO
+//  ESPIAR PRONÓSTICOS DE OTROS MIEMBROS
 // ══════════════════════════════════════════════
 async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
   document.getElementById('vs-partido-titulo').textContent = `${localNombre} vs ${visitNombre}`;
@@ -1521,7 +1550,6 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
   const loggedIn = await tryAutoLogin();
   if (!loggedIn) showScreen('login');
   
-  // Registro automático del Service Worker para modo PWA
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js')
