@@ -1131,11 +1131,16 @@ async function loadPartidos(etapa) {
       const rVisit = resultado ? resultado.goles_visit : null;
       const pts = calcPuntos(pLocal, pVisit, rLocal, rVisit, mult);
 
+      // --- CÁLCULO VISUAL DE CHIPS Y PUNTOS CON PREMIO NUMÉRICO ---
       let chipHtml = '';
       if (resultado) {
-        if (pts === 3 * mult) chipHtml = `<span class="pts-chip pts-exacto">✓ Exacto</span>`;
-        else if (pts === 1 * mult) chipHtml = `<span class="pts-chip pts-resultado">~ Resultado</span>`;
-        else chipHtml = `<span class="pts-chip pts-fallo">✗ Fallado</span>`;
+        if (pts === 3 * mult) {
+          chipHtml = `<span class="pts-chip pts-exacto">✓ Exacto (+${pts})</span>`;
+        } else if (pts === 1 * mult) {
+          chipHtml = `<span class="pts-chip pts-resultado">~ Resultado (+${pts})</span>`;
+        } else {
+          chipHtml = `<span class="pts-chip pts-fallo">✗ Fallado (+0)</span>`;
+        }
       } else {
         chipHtml = closed ? `<span class="pts-chip pts-cerrado">⏱ Cerrado</span>` : `<span class="pts-chip pts-pendiente">Pendiente</span>`;
       }
