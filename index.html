@@ -465,18 +465,14 @@ html, body, .screen, .scroll-area { scrollbar-width: none; }
 
       <div class="avatar-section">
         <label>Tu foto de perfil</label>
-        <div class="avatar-tabs">
-          <button class="avatar-tab-btn active" onclick="switchAvatarTab('emoji')">Elegir emoji</button>
-          <button class="avatar-tab-btn" onclick="switchAvatarTab('foto')">Subir foto</button>
+        <div class="avatar-tabs" style="margin-bottom: 0;">
+          <button type="button" class="avatar-tab-btn" id="btn-avatar-emoji" onclick="abrirSelectorEmojiLogin()" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span id="txt-emoji-btn">Elegir emoji</span> <span id="preview-emoji-btn" style="font-size: 16px;">⚽</span>
+          </button>
+          <button type="button" class="avatar-tab-btn" id="btn-avatar-foto" onclick="document.getElementById('photo-input').click()">Subir foto</button>
         </div>
-
-        <div id="avatar-emoji-grid" class="emoji-grid"></div>
-
-        <div id="avatar-foto-area" class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
-          <img id="photo-preview" src="" alt="" class="photo-preview" style="display:none;">
-          <div id="upload-hint" class="upload-hint">📷 Tocá para elegir una foto</div>
-          <input type="file" id="photo-input" accept="image/*">
-        </div>
+        
+        <input type="file" id="photo-input" accept="image/*" style="display: none;">
       </div>
 
       <button class="btn-primary" id="btn-ingresar" onclick="doLogin()" disabled>Ingresar →</button>
@@ -673,7 +669,14 @@ html, body, .screen, .scroll-area { scrollbar-width: none; }
       <button onclick="closeModal('modal-ver-pronosticos')" style="width:100%; margin-top:16px; padding: 12px; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;">Cerrar</button>
     </div>
   </div>
-
+<div class="modal-overlay" id="modal-login-emojis">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" style="text-align: center;">ELEGÍ TU AVATAR</div>
+      <div class="emoji-grid-modal" id="login-emoji-drop-grid"></div>
+      <button onclick="closeModal('modal-login-emojis')" style="width:100%; margin-top:20px; padding:12px; background:var(--navy); color:white; border:none; border-radius:var(--radius-sm); font-size:14px; font-weight:700; cursor:pointer; font-family:'DM Sans',sans-serif;">Confirmar ✔</button>
+    </div>
+  </div>
   <div class="toast" id="toast"></div>
 
 </div> 
@@ -687,7 +690,7 @@ const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ══════════════════════════════════════════════
-//  ESTADO GLOBAL
+//  ESTADO GLOBAL (POR DEFAULT: PELOTA ⚽)
 // ══════════════════════════════════════════════
 let currentUser = null;
 let currentGrupo = null;
@@ -776,6 +779,11 @@ function cambiarFiltroEstado(nuevoFiltro) {
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
+if (!currentGrupo) {
+  const savedGrupo = localStorage.getItem('prode_current_grupo');
+  if (savedGrupo) currentGrupo = JSON.parse(savedGrupo);
+}
+
 function isClosed(fechaStr, horaStr) {
   const [y, m, dia] = fechaStr.split('-').map(Number);
   const [h, min] = horaStr.split(':').map(Number);
@@ -811,7 +819,7 @@ function calcPuntos(pLocal, pVisit, rLocal, rVisit, mult) {
 }
 
 // ══════════════════════════════════════════════
-//  AVATAR
+//  AVATAR & DESPLEGABLE NUEVO DEL LOGIN
 // ══════════════════════════════════════════════
 function buildEmojiGrid(containerId, emojis, selectedVar, onSelect) {
   const el = document.getElementById(containerId);
@@ -838,16 +846,92 @@ function buildEmojiGrid(containerId, emojis, selectedVar, onSelect) {
   });
 }
 
-// Corregido bug visual que causaba fallos al alternar pestañas de avatar
-function switchAvatarTab(mode) {
-  avatarMode = mode;
-  document.querySelectorAll('.avatar-tab-btn').forEach((b) => {
-    const isEmojiTab = b.getAttribute('onclick').includes('emoji');
-    b.classList.toggle('active', (isEmojiTab && mode === 'emoji') || (!isEmojiTab && mode === 'foto'));
+// Abre el modal inferior para elegir los emojis del login
+function abrirSelectorEmojiLogin() {
+  avatarMode = 'emoji';
+  document.getElementById('btn-avatar-foto').classList.remove('active');
+  document.getElementById('btn-avatar-emoji').classList.add('active');
+  document.getElementById('btn-avatar-foto').textContent = 'Subir foto'; // Reset de texto por si tenía foto antes
+  
+  const el = document.getElementById('login-emoji-drop-grid');
+  if (!el) return;
+  el.innerHTML = '';
+
+  EMOJIS_AVATAR.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-opt-modal';
+    btn.textContent = e;
+    
+    if (e === selectedEmoji) btn.classList.add('selected');
+    
+    btn.onclick = () => {
+      selectedEmoji = e;
+      photoFileToUpload = null; 
+      
+      // Impacta el emoji seleccionado en el botón del login de atrás
+      document.getElementById('preview-emoji-btn').textContent = e;
+      abrirSelectorEmojiLogin(); // Redibuja para marcar la selección activa
+    };
+    el.appendChild(btn);
   });
-  document.getElementById('avatar-emoji-grid').style.display = mode === 'emoji' ? 'grid' : 'none';
-  document.getElementById('avatar-foto-area').style.display = mode === 'foto' ? 'block' : 'none';
-  document.getElementById('avatar-foto-area').classList.toggle('active-tab', mode === 'foto');
+
+  openModal('modal-login-emojis');
+}
+
+// Escuchador dinámico modificado para fotos en el login (Activa pestañas)
+document.getElementById('photo-input')?.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  photoFileToUpload = file; 
+  avatarMode = 'foto';
+
+  document.getElementById('btn-avatar-emoji').classList.remove('active');
+  document.getElementById('btn-avatar-foto').classList.add('active');
+  
+  document.getElementById('btn-avatar-foto').textContent = '✓ Foto lista';
+  toast('📷 Foto cargada correctamente');
+});
+
+// Selector para cambiar el avatar dentro de la sección Mi Perfil
+function cambiarAvatarPerfil(action) {
+  const grid = document.getElementById('perfil-emoji-grid');
+  if (!grid) return;
+
+  if (grid.style.display === 'grid') {
+    grid.style.display = 'none';
+    return;
+  }
+
+  grid.style.display = 'grid';
+  grid.innerHTML = '';
+
+  EMOJIS_AVATAR.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-opt';
+    btn.textContent = e;
+    if (e === currentUser.emoji) btn.classList.add('selected');
+
+    btn.onclick = async () => {
+      toast('⏳ Guardando avatar...');
+      try {
+        const { error } = await sb.from('usuarios').update({ emoji: e, foto_url: null }).eq('id', currentUser.id);
+        if (error) throw error;
+
+        currentUser.emoji = e;
+        currentUser.foto_url = null;
+        
+        renderAvatarEl(document.getElementById('perfil-avatar-big'), currentUser);
+        renderAvatarEl(document.getElementById('header-avatar'), currentUser);
+        grid.style.display = 'none'; 
+        toast('✅ Avatar actualizado');
+      } catch (err) {
+        console.error(err);
+        toast('❌ Error al guardar avatar');
+      }
+    };
+    grid.appendChild(btn);
+  });
 }
 
 function renderAvatarEl(el, user) {
@@ -859,25 +943,6 @@ function renderAvatarEl(el, user) {
     el.textContent = user.emoji || '⚽';
   }
 }
-
-document.getElementById('photo-input')?.addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  photoFileToUpload = file; 
-
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const prev = document.getElementById('photo-preview');
-    if (prev) { 
-      prev.src = ev.target.result; 
-      prev.style.display = 'block'; 
-    }
-    const hint = document.getElementById('upload-hint');
-    if (hint) hint.textContent = '✓ Foto cargada — tocá para cambiar';
-  };
-  reader.readAsDataURL(file);
-});
 
 // ══════════════════════════════════════════════
 //  VALIDACIÓN REACTIVA DEL LOGIN
