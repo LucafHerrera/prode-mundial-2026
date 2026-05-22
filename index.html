@@ -41,10 +41,11 @@ body {
 .screen.active { display: flex; flex-direction: column; }
 .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
 
-/* ─── BOTTOM NAV ─── */
+/* ─── BOTTOM NAV (CORREGIDO SIN CORTES) ─── */
 .bottom-nav {
   display: flex; background: var(--navy); height: 64px;
   border-top: 1px solid rgba(255,255,255,0.08);
+  box-sizing: border-box; padding: 4px 10px; align-items: center;
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 .nav-btn {
@@ -160,16 +161,6 @@ body {
 }
 .grupo-name { font-size: 16px; font-weight: 700; color: var(--navy); }
 .grupo-meta { font-size: 12px; color: var(--text3); margin-top: 3px; }
-.grupo-stats {
-  display: flex; border-top: 1px solid var(--border);
-}
-.grupo-stat {
-  flex: 1; padding: 10px; text-align: center;
-  border-right: 1px solid var(--border);
-}
-.grupo-stat:last-child { border-right: none; }
-.grupo-stat-num { font-size: 17px; font-weight: 700; color: var(--navy); }
-.grupo-stat-label { font-size: 10px; color: var(--text3); margin-top: 1px; font-weight: 500; }
 .btn-crear-grupo {
   margin: 4px 16px 0; padding: 14px; border-radius: var(--radius);
   background: var(--navy); color: var(--gold); border: none;
@@ -218,10 +209,9 @@ body {
 }
 .equipo-blk { flex: 1; text-align: center; }
 .equipo-bandera {
-  font-size: 36px; /* Las dejamos bien grandes y nítidas */
+  font-size: 36px;
   line-height: 1;
   margin-bottom: 5px;
-  /* Esto obliga a Windows y Mac a usar sus motores de emojis nativos en vez de letras */
   font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
 .equipo-nombre { font-size: 12px; font-weight: 600; color: var(--navy); }
@@ -255,7 +245,6 @@ body {
   display: flex; align-items: center; justify-content: space-between;
 }
 .partido-footer-left { font-size: 11px; color: var(--text3); }
-.partido-footer-right { font-size: 12px; font-weight: 700; color: var(--grass); }
 .btn-save-match {
   font-size: 12px; font-weight: 600; padding: 6px 14px;
   background: var(--navy); color: var(--gold); border: none;
@@ -292,9 +281,6 @@ body {
 }
 .rank-row.me { background: #FFFBE6; border-color: var(--gold2); }
 .rank-pos { width: 24px; text-align: center; font-size: 14px; font-weight: 700; color: var(--text3); }
-.rank-pos.gold { color: #C5A100; }
-.rank-pos.silver { color: #8A9BA8; }
-.rank-pos.bronze { color: #A0673A; }
 .rank-avatar {
   width: 38px; height: 38px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -307,38 +293,6 @@ body {
 .rank-pts-col { text-align: right; }
 .rank-pts-num { font-size: 18px; font-weight: 700; color: var(--navy); }
 .rank-pts-lbl { font-size: 10px; color: var(--text3); }
-
-/* ─── MI PERFIL ─── */
-.perfil-hero {
-  background: var(--navy); padding: 24px 16px 28px;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-}
-.perfil-avatar {
-  width: 80px; height: 80px; border-radius: 50%;
-  border: 3px solid var(--gold); display: flex; align-items: center;
-  justify-content: center; font-size: 44px; background: var(--navy2); overflow: hidden;
-}
-.perfil-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.perfil-nombre { font-size: 22px; font-weight: 700; color: white; }
-.perfil-stats { display: flex; gap: 20px; margin-top: 6px; }
-.perfil-stat { text-align: center; }
-.perfil-stat-num { font-size: 22px; font-weight: 700; color: var(--gold); }
-.perfil-stat-lbl { font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 1px; }
-.perfil-body { padding: 16px; }
-.perfil-section-title { font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-.perfil-historial-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; background: white; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); margin-bottom: 6px;
-}
-.perfil-match-flags { display: flex; gap: 3px; font-size: 20px; }
-.perfil-match-score { flex: 1; font-size: 13px; color: var(--text2); }
-.btn-cerrar-sesion {
-  width: 100%; margin-top: 20px; padding: 13px;
-  background: white; color: var(--red); border: 1.5px solid rgba(193,41,46,0.3);
-  border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
-  font-family: 'DM Sans', sans-serif; cursor: pointer;
-}
 
 /* ─── MODALES ─── */
 .modal-overlay {
@@ -383,7 +337,6 @@ body {
   display: flex; align-items: center; justify-content: center;
 }
 .banner-slot img { width: 100%; display: block; border-radius: var(--radius-sm); }
-.banner-placeholder { font-size: 11px; color: var(--text3); }
 
 /* ─── TOAST ─── */
 .toast {
@@ -399,7 +352,6 @@ body {
 .empty-state { padding: 48px 24px; text-align: center; }
 .empty-state-icon { font-size: 48px; margin-bottom: 14px; }
 .empty-state-title { font-size: 17px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
-.empty-state-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
 
 /* ─── SPINNER ─── */
 .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 40px; }
@@ -423,29 +375,18 @@ body {
   font-family: 'DM Sans', sans-serif; cursor: pointer;
 }
 
-/* ─── JOIN GROUP ─── */
-.join-code-section { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
-.join-code-section h3 { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 10px; }
-/* Ocultar barra de scroll en navegadores de PC (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  display: none;
-}
+::-webkit-scrollbar { display: none; }
+html, body, .screen, .scroll-area { scrollbar-width: none; }
 
-/* Ocultar barra de scroll en Firefox */
-html, body, .screen, .scroll-area {
-  scrollbar-width: none;
-}
-
-/* Forzar que el emoji seleccionado brille en amarillo intenso */
 .emoji-grid .emoji-opt.selected, 
 #avatar-emoji-grid .emoji-opt.selected {
-  border-color: #F5C842 !important; /* Usamos amarillo oro */
+  border-color: #F5C842 !important;
   background: rgba(245, 200, 66, 0.25) !important;
   transform: scale(1.05);
 }
 </style>
 </head>
-<<body>
+<body>
 <div id="app">
 
   <div id="screen-login" class="screen active" style="display: flex; flex-direction: column;">
@@ -485,6 +426,30 @@ html, body, .screen, .scroll-area {
     </div>
   </div>
 
+  <div id="screen-pronosticos" class="screen" style="display: none;">
+    <div class="app-header">
+      <div>
+        <div class="app-header-title" id="prono-grupo-name">PRONÓSTICOS</div>
+        <div class="app-header-sub" id="prono-grupo-sub">—</div>
+      </div>
+      <button onclick="goBack()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:22px;cursor:pointer;">‹</button>
+    </div>
+    <div id="banner-pronosticos" class="banner-slot" style="display:none;margin:0;border-radius:0;">
+      <img id="banner-prono-img" src="" alt="Banner">
+    </div>
+    <div class="etapa-tabs" id="etapa-tabs"></div>
+    
+    <div style="display: flex; gap: 8px; padding: 4px 16px 12px; background: var(--navy); overflow-x: auto;">
+      <button class="filtro-estado-btn active" id="flt-todos" onclick="cambiarFiltroEstado('todos')" style="background: rgba(255,255,255,0.1); border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;">Todos</button>
+      <button class="filtro-estado-btn" id="flt-pendientes" onclick="cambiarFiltroEstado('pendientes')" style="background: rgba(255,255,255,0.05); border: none; color: rgba(255,255,255,0.6); padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;">Pendientes de cargar</button>
+    </div>
+
+    <div class="scroll-area" id="pronosticos-scroll">
+      <div style="height:10px;"></div>
+      <div id="partidos-list"></div>
+    </div>
+  </div>
+
   <div id="screen-grupos" class="screen" style="display: none;">
     <div class="app-header">
       <div>
@@ -506,24 +471,6 @@ html, body, .screen, .scroll-area {
       <div style="margin: 8px 16px 0;">
         <button class="btn-crear-grupo" style="background:var(--cream2);color:var(--navy);" onclick="openJoinGrupo()">Unirse con código</button>
       </div>
-    </div>
-  </div>
-
-  <div id="screen-pronosticos" class="screen" style="display: none;">
-    <div class="app-header">
-      <div>
-        <div class="app-header-title" id="prono-grupo-name">PRONÓSTICOS</div>
-        <div class="app-header-sub" id="prono-grupo-sub">—</div>
-      </div>
-      <button onclick="goBack()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:22px;cursor:pointer;">‹</button>
-    </div>
-    <div id="banner-pronosticos" class="banner-slot" style="display:none;margin:0;border-radius:0;">
-      <img id="banner-prono-img" src="" alt="Banner">
-    </div>
-    <div class="etapa-tabs" id="etapa-tabs"></div>
-    <div class="scroll-area" id="pronosticos-scroll">
-      <div style="height:10px;"></div>
-      <div id="partidos-list"></div>
     </div>
   </div>
 
@@ -602,13 +549,13 @@ html, body, .screen, .scroll-area {
   </div>
 
   <div class="bottom-nav" id="bottom-nav" style="display:none;">
-    <button class="nav-btn" id="nav-grupos" onclick="showMainScreen('grupos')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
-      <span class="nav-label">Grupos</span>
-    </button>
     <button class="nav-btn" id="nav-pronosticos" onclick="showMainScreen('pronosticos')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
       <span class="nav-label">Pronósticos</span>
+    </button>
+    <button class="nav-btn" id="nav-grupos" onclick="showMainScreen('grupos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
+      <span class="nav-label">Grupos</span>
     </button>
     <button class="nav-btn" id="nav-perfil" onclick="showMainScreen('perfil')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
@@ -665,9 +612,7 @@ html, body, .screen, .scroll-area {
       <div class="modal-handle"></div>
       <div class="modal-title" style="margin-bottom: 4px;">PRONÓSTICOS DEL GRUPO</div>
       <p id="vs-partido-titulo" style="font-size: 13px; color: var(--text2); font-weight: 700; text-align: center; margin-bottom: 16px; text-transform: uppercase; color: var(--gold2);"></p>
-      
       <div id="lista-pronosticos-grupo" class="scroll-area" style="flex: 1; overflow-y: auto; padding: 4px 0;"></div>
-      
       <button onclick="closeModal('modal-ver-pronosticos')" style="width:100%; margin-top:16px; padding: 12px; background: var(--navy); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;">Cerrar</button>
     </div>
   </div>
@@ -675,7 +620,7 @@ html, body, .screen, .scroll-area {
   <div class="toast" id="toast"></div>
 
 </div> 
-</body>
+
 <script>
 // ══════════════════════════════════════════════
 //  CONFIG SUPABASE — reemplazá con tus keys
@@ -693,7 +638,8 @@ let currentEtapa = 'grupos';
 let avatarMode = 'emoji';
 let selectedEmoji = '⚽';
 let selectedGrupoEmoji = '🏆';
-let photoFileToUpload = null; // Guardamos el archivo real de la foto en memoria global
+let photoFileToUpload = null; 
+let filtroEstadoActual = 'todos'; // Estado para filtrar partidos por cargar
 
 // ══════════════════════════════════════════════
 //  DATOS LOCALES 
@@ -711,7 +657,7 @@ const ETAPAS = [
 ];
 
 // ══════════════════════════════════════════════
-//  UTILIDADES
+//  UTILIDADES Y FILTROS
 // ══════════════════════════════════════════════
 function toast(msg, ms=2200) {
   const t = document.getElementById('toast');
@@ -757,6 +703,19 @@ function showMainScreen(id) {
   if (id === 'perfil') loadPerfil();
 }
 
+function cambiarFiltroEstado(nuevoFiltro) {
+  filtroEstadoActual = nuevoFiltro;
+  
+  document.querySelectorAll('.filtro-estado-btn').forEach(b => {
+    const isActive = b.id === `flt-${nuevoFiltro}`;
+    b.classList.toggle('active', isActive);
+    b.style.background = isActive ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)';
+    b.style.color = isActive ? 'white' : 'rgba(255,255,255,0.6)';
+  });
+  
+  loadPartidos(currentEtapa);
+}
+
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -764,9 +723,17 @@ function isClosed(fechaStr, horaStr) {
   const [y, m, dia] = fechaStr.split('-').map(Number);
   const [h, min] = horaStr.split(':').map(Number);
   const matchDate = new Date(y, m - 1, dia, h, min);
-  matchDate.setMinutes(matchDate.getMinutes() - 60); // Cierre de seguridad 1h antes
+  matchDate.setMinutes(matchDate.getMinutes() - 60); 
   const now = new Date();
   return now >= matchDate;
+}
+
+// Implementación de copiar código que faltaba declarar
+function copiarCodigo() {
+  const display = document.getElementById('invite-code-display');
+  if (!display || display.textContent === '—') return;
+  navigator.clipboard.writeText(display.textContent);
+  toast('📋 Código copiado al portapapeles');
 }
 
 function formatFechaArg(fechaStr, horaStr) {
@@ -831,7 +798,6 @@ function renderAvatarEl(el, user) {
   }
 }
 
-// Escuchador dinámico de subida de fotos (Previsualización local reactiva)
 document.getElementById('photo-input')?.addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -939,7 +905,7 @@ async function tryAutoLogin() {
 }
 
 // ══════════════════════════════════════════════
-//  AFTER LOGIN
+//  AFTER LOGIN (AHORA MANDA DIRECTO A PRONÓSTICOS)
 // ══════════════════════════════════════════════
 function afterLogin() {
   document.getElementById('header-user-name').textContent = currentUser.nombre;
@@ -947,7 +913,7 @@ function afterLogin() {
   document.getElementById('bottom-nav').style.display = 'flex';
   const loginScreen = document.getElementById('screen-login');
   if (loginScreen) { loginScreen.classList.remove('active'); loginScreen.style.display = 'none'; }
-  showMainScreen('grupos');
+  showMainScreen('pronosticos'); 
 }
 
 // ══════════════════════════════════════════════
@@ -988,7 +954,7 @@ async function loadGrupos() {
 
     listaPuntos.sort((a, b) => b.pts - a.pts);
 
-    let rankingHtml = `<div class="grupo-mini-ranking" style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border); font-size:12px; color:var(--text2);">`;
+    let rankingHtml = `<div class="grupo-mini-ranking" style="margin-top:10px; padding-top:8px; border-top:1px solid var(--border); font-size:12px; color:var(--text2); animation:none;">`;
     listaPuntos.slice(0, 3).forEach((rank, index) => {
       const medallas = ['🥇', '🥈', '🥉'];
       rankingHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:2px;">
@@ -1073,7 +1039,7 @@ async function joinGrupo() {
 }
 
 // ══════════════════════════════════════════════
-//  PRONÓSTICOS (Globales)
+//  PRONÓSTICOS (FONDO GRIS EN BLOQUEADOS + FILTROS)
 // ══════════════════════════════════════════════
 function buildEtapaTabs() {
   const cont = document.getElementById('etapa-tabs');
@@ -1098,7 +1064,6 @@ async function loadPartidos(etapa) {
   cont.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
   try {
-    // 1. Traemos los partidos en vivo desde la tabla de Supabase (Fixture Real)
     const { data: partidos, error: partError } = await sb
       .from('partidos')
       .select('*')
@@ -1108,12 +1073,10 @@ async function loadPartidos(etapa) {
 
     if (partError) throw partError;
 
-    // 2. Traemos tus pronósticos cargados
     const { data: pronos } = await sb.from('pronosticos').select('*').eq('usuario_id', currentUser.id);
     const pronoMap = {};
     (pronos || []).forEach(p => { pronoMap[p.partido_id] = p; });
 
-    // 3. Traemos los resultados oficiales
     const { data: resultados } = await sb.from('resultados').select('*');
     const resMap = {};
     (resultados || []).forEach(r => { resMap[r.partido_id] = r; });
@@ -1127,6 +1090,15 @@ async function loadPartidos(etapa) {
 
     let lastGrupo = null;
     partidos.forEach(p => {
+      const prono = pronoMap[p.id];
+      const resultado = resMap[p.id];
+      const closed = isClosed(p.fecha, p.hora);
+
+      // FILTRO REACTIVO: Si está activado "pendientes" y ya cerró o finalizó, lo removemos
+      if (filtroEstadoActual === 'pendientes' && (closed || resultado)) {
+        return;
+      }
+
       // Separador visual por Grupo (A al L)
       if (p.grupo && p.grupo !== lastGrupo) {
         const sep = document.createElement('div');
@@ -1136,11 +1108,7 @@ async function loadPartidos(etapa) {
         lastGrupo = p.grupo;
       }
 
-      const prono = pronoMap[p.id];
-      const resultado = resMap[p.id];
-      const closed = isClosed(p.fecha, p.hora);
       const mult = p.mult || 1;
-
       const pLocal = prono ? prono.goles_local : null;
       const pVisit = prono ? prono.goles_visit : null;
       const rLocal = resultado ? resultado.goles_local : null;
@@ -1159,9 +1127,9 @@ async function loadPartidos(etapa) {
       const card = document.createElement('div');
       card.className = 'partido-item';
       
-      // HABILITAMOS EL CLIC PARA ESPIAR: Solo si el partido ya cerró o tiene resultado real
+      // CAMBIO DE COLOR E INHIBICIÓN SI ESTÁ BLOQUEADO
       if (closed || resultado) {
-        card.style.cursor = 'pointer';
+        card.style.cssText = 'background: #f4f5f7 !important; border-color: rgba(0,0,0,0.06); cursor: pointer;';
         card.onclick = () => abrirEspiarPronosticos(p.id, p.local_nombre, p.visit_nombre);
       }
 
@@ -1171,9 +1139,9 @@ async function loadPartidos(etapa) {
           <div class="equipo-blk"><div class="equipo-bandera">${p.local}</div><div class="equipo-nombre">${p.local_nombre}</div></div>
           <div class="pronostico-center">
             <div class="score-inputs">
-              <input type="number" class="score-in ${closed || resultado ? 'locked' : ''}" id="score-l-${p.id}" value="${pLocal !== null ? pLocal : ''}" placeholder="–">
+              <input type="number" class="score-in ${closed || resultado ? 'locked' : ''}" id="score-l-${p.id}" value="${pLocal !== null ? pLocal : ''}" placeholder="–" ${closed || resultado ? 'disabled' : ''}>
               <span class="score-sep">:</span>
-              <input type="number" class="score-in ${closed || resultado ? 'locked' : ''}" id="score-r-${p.id}" value="${pVisit !== null ? pVisit : ''}" placeholder="–">
+              <input type="number" class="score-in ${closed || resultado ? 'locked' : ''}" id="score-r-${p.id}" value="${pVisit !== null ? pVisit : ''}" placeholder="–" ${closed || resultado ? 'disabled' : ''}>
             </div>
             ${chipHtml}
           </div>
@@ -1198,7 +1166,6 @@ async function guardarProno(partidoId) {
   
   if (l === '' || r === '') return toast('⚠️ Ingresá los marcadores antes de guardar');
 
-  // PROTECCIÓN REAL DESDE LA INTERFAZ: Valida que no intenten forzar partidos bloqueados
   const inputs = document.getElementById('score-l-' + partidoId);
   if (inputs && inputs.classList.contains('locked')) {
     return toast('🛑 ¡Pillo! El pronóstico para este partido ya está cerrado.');
@@ -1250,7 +1217,6 @@ async function loadTabla() {
 
     let ptsAnteriores = ptsTotales;
     if (pronos && pronos.length > 0) {
-      // Ordenamiento numérico real basado en los IDs 'p1', 'p2', etc. de Supabase
       const ultimoProno = [...pronos].sort((a, b) => {
         const numA = parseInt(a.partido_id.replace('p', '')) || 0;
         const numB = parseInt(b.partido_id.replace('p', '')) || 0;
@@ -1265,7 +1231,7 @@ async function loadTabla() {
   const rankingPrevio = [...resultados].sort((a,b) => b.ptsPrev - a.ptsPrev);
   resultados.sort((a,b) => b.pts - a.pts || b.exactos - a.exactos);
 
-  const myRank = resultados.findIndex(r => r.usuario.id === currentUser.id);
+  const myRank = Fly = resultados.findIndex(r => r.usuario.id === currentUser.id);
   const myData = resultados[myRank];
   const myAvatarEl = document.getElementById('tabla-my-avatar');
   if (myAvatarEl) renderAvatarEl(myAvatarEl, myData ? myData.usuario : currentUser);
@@ -1332,7 +1298,6 @@ async function loadPerfil() {
   const gruposEl = document.getElementById('ps-grupos');
   if (gruposEl) gruposEl.textContent = grupos||0;
 
-  // ESCUCHADOR EXCLUSIVO DEL PERFIL: Detecta cuando eligen una nueva foto
   const perfilPhotoInput = document.getElementById('perfil-photo-input');
   if (perfilPhotoInput && !perfilPhotoInput.dataset.hasListener) {
     perfilPhotoInput.dataset.hasListener = "true";
@@ -1345,19 +1310,15 @@ async function loadPerfil() {
         const ext = file.name.split('.').pop();
         const filename = `avatars/${Date.now()}-${currentUser.nombre.toLowerCase().replace(/\s/g, '_')}.${ext}`;
         
-        // 1. Subimos la foto al bucket 'prode'
         const { error: upErr } = await sb.storage.from('prode').upload(filename, file, { cacheControl: '3600', upsert: false });
         if (upErr) throw upErr;
 
-        // 2. Traemos su URL pública
         const { data: publicData } = sb.storage.from('prode').getPublicUrl(filename);
         const nuevaFotoUrl = publicData.publicUrl;
 
-        // 3. Actualizamos la tabla de usuarios anulando el emoji viejo
         const { error: dbErr } = await sb.from('usuarios').update({ foto_url: nuevaFotoUrl, emoji: null }).eq('id', currentUser.id);
         if (dbErr) throw dbErr;
 
-        // 4. Actualizamos el estado global de la app y refrescamos la vista
         currentUser.foto_url = nuevaFotoUrl;
         currentUser.emoji = null;
         renderAvatarEl(document.getElementById('perfil-avatar-big'), currentUser);
@@ -1371,7 +1332,7 @@ async function loadPerfil() {
     });
   }
 }
-// Función para cambiar el avatar del perfil por un emoji en tiempo real
+
 function cambiarAvatarPerfil(action) {
   const grid = document.getElementById('perfil-emoji-grid');
   if (!grid) return;
@@ -1384,7 +1345,6 @@ function cambiarAvatarPerfil(action) {
   grid.style.display = 'grid';
   grid.innerHTML = '';
 
-  // EMOJIS_AVATAR es tu array con la pelota, la copa, el león, etc.
   EMOJIS_AVATAR.forEach(e => {
     const btn = document.createElement('button');
     btn.className = 'emoji-opt';
@@ -1394,17 +1354,15 @@ function cambiarAvatarPerfil(action) {
     btn.onclick = async () => {
       toast('⏳ Guardando avatar...');
       try {
-        // Actualizamos en Supabase guardando el emoji y borrando la foto anterior si existía
         const { error } = await sb.from('usuarios').update({ emoji: e, foto_url: null }).eq('id', currentUser.id);
         if (error) throw error;
 
-        // Seteamos los cambios en vivo en la interfaz
         currentUser.emoji = e;
         currentUser.foto_url = null;
         
         renderAvatarEl(document.getElementById('perfil-avatar-big'), currentUser);
         renderAvatarEl(document.getElementById('header-avatar'), currentUser);
-        grid.style.display = 'none'; // Cerramos la grilla
+        grid.style.display = 'none'; 
         toast('✅ Avatar actualizado');
       } catch (err) {
         console.error(err);
@@ -1415,7 +1373,6 @@ function cambiarAvatarPerfil(action) {
   });
 }
 
-
 function cerrarSesion() {
   localStorage.removeItem('prode_user_id');
   localStorage.removeItem('prode_current_grupo');
@@ -1425,14 +1382,8 @@ function cerrarSesion() {
 }
 
 // ══════════════════════════════════════════════
-//  INIT
+//  ESPIAR PRONÓSTICOS INTERNO
 // ══════════════════════════════════════════════
-(async () => {
-  buildEmojiGrid('avatar-emoji-grid', EMOJIS_AVATAR, 'selectedEmoji', e => { selectedEmoji = e; });
-  buildEmojiGrid('grupo-emoji-grid', EMOJIS_GRUPO, 'selectedGrupoEmoji', e => { selectedGrupoEmoji = e; });
-  const loggedIn = await tryAutoLogin();
-  if (!loggedIn) showScreen('login');
-})();
 async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
   document.getElementById('vs-partido-titulo').textContent = `${localNombre} vs ${visitNombre}`;
   
@@ -1441,12 +1392,8 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
   
   openModal('modal-ver-pronosticos');
 
-  // ═══════════════════════════════════════════════════════════════
-  // MODAL INTELIGENTE: Si no está parado dentro de un grupo...
-  // ═══════════════════════════════════════════════════════════════
   if (!currentGrupo) {
     try {
-      // 1. Buscamos los grupos a los que pertenece el usuario actual
       const { data: memberships, error } = await sb
         .from('grupo_miembros')
         .select(`grupo_id, grupos (*)`)
@@ -1454,7 +1401,6 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
 
       if (error) throw error;
 
-      // CONDICIÓN: Si no pertenece a NINGÚN grupo todavía
       if (!memberships || memberships.length === 0) {
         contenedor.innerHTML = `
           <div style="text-align:center; padding:24px 16px;">
@@ -1464,7 +1410,6 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
         return;
       }
 
-      // CONDICIÓN: Si pertenece a grupos, le listamos las opciones táctiles
       contenedor.innerHTML = `
         <div style="padding:10px 14px;">
           <p style="color:var(--text3); font-size:12px; font-weight:700; text-transform:uppercase; margin-bottom:12px; letter-spacing:0.5px; text-align:center;">Seleccioná un grupo para espiar:</p>
@@ -1480,7 +1425,6 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
         const btnGrupo = document.createElement('button');
         btnGrupo.style.cssText = 'display:flex; align-items:center; gap:12px; width:100%; padding:12px; background:white; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; text-align:left; font-family:"DM Sans",sans-serif; transition:all 0.15s;';
         
-        // Efecto hover/active simple por JS
         btnGrupo.onmousedown = () => btnGrupo.style.background = 'var(--cream)';
         btnGrupo.onmouseup = () => btnGrupo.style.background = 'white';
 
@@ -1490,18 +1434,17 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
           <span style="font-size:14px; color:var(--text3);">→</span>
         `;
 
-        // Al hacer clic, seteamos ese grupo como el actual y relanzamos la función inmediatamente
         btnGrupo.onclick = () => {
           currentGrupo = g;
           localStorage.setItem('prode_current_grupo', JSON.stringify(g));
-          document.getElementById('tabla-grupo-name').textContent = g.nombre.toUpperCase(); // Sincroniza la pestaña Tabla
-          abrirEspiarPronosticos(partidoId, localNombre, visitNombre); // Recarga el modal con los datos del grupo elegido
+          document.getElementById('tabla-grupo-name').textContent = g.nombre.toUpperCase(); 
+          abrirEspiarPronosticos(partidoId, localNombre, visitNombre); 
         };
 
         listaCont.appendChild(btnGrupo);
       });
 
-      return; // Frenamos la ejecución acá para que elija el grupo
+      return; 
     } catch (err) {
       console.error(err);
       contenedor.innerHTML = '<p style="color:var(--red); text-align:center; padding:20px;">Error al cargar tus grupos.</p>';
@@ -1509,9 +1452,6 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // LOGICA NORMAL: Si ya hay un grupo seleccionado, trae los pronósticos
-  // ═══════════════════════════════════════════════════════════════
   try {
     const { data: miembros, error: errM } = await sb
       .from('grupo_miembros')
@@ -1570,6 +1510,16 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
     contenedor.innerHTML = '<p style="color:var(--red); text-align:center; padding:20px;">Error al espiar los pronósticos.</p>';
   }
 }
+
+// ══════════════════════════════════════════════
+//  INIT AUTO RUN
+// ══════════════════════════════════════════════
+(async () => {
+  buildEmojiGrid('avatar-emoji-grid', EMOJIS_AVATAR, 'selectedEmoji', e => { selectedEmoji = e; });
+  buildEmojiGrid('grupo-emoji-grid', EMOJIS_GRUPO, 'selectedGrupoEmoji', e => { selectedGrupoEmoji = e; });
+  const loggedIn = await tryAutoLogin();
+  if (!loggedIn) showScreen('login');
+})();
 </script>
 </body>
 </html>
