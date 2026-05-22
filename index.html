@@ -1024,74 +1024,92 @@ async function loadPartidos(etapa) {
   if (!cont) return;
   cont.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
-  const { data: pronos } = await sb.from('pronosticos').select('*').eq('usuario_id', currentUser.id);
-  const pronoMap = {};
-  (pronos||[]).forEach(p => { pronoMap[p.partido_id] = p; });
+  try {
+    // 1. Traemos los partidos en vivo desde la tabla de Supabase (Fixture Real)
+    const { data: partidos, error: partError } = await sb
+      .from('partidos')
+      .select('*')
+      .eq('etapa', etapa)
+      .order('fecha', { ascending: true })
+      .order('hora', { ascending: true });
 
-  const { data: resultados } = await sb.from('resultados').select('*');
-  const resMap = {};
-  (resultados||[]).forEach(r => { resMap[r.partido_id] = r; });
+    if (partError) throw partError;
 
-  const partidos = PARTIDOS.filter(p => p.etapa === etapa);
-  cont.innerHTML = '';
+    // 2. Traemos tus pronósticos cargados
+    const { data: pronos } = await sb.from('pronosticos').select('*').eq('usuario_id', currentUser.id);
+    const pronoMap = {};
+    (pronos || []).forEach(p => { pronoMap[p.partido_id] = p; });
 
-  if (partidos.length === 0) {
-    cont.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗓</div><div class="empty-state-title">Sin partidos aún</div></div>`;
-    return;
-  }
+    // 3. Traemos los resultados oficiales
+    const { data: resultados } = await sb.from('resultados').select('*');
+    const resMap = {};
+    (resultados || []).forEach(r => { resMap[r.partido_id] = r; });
 
-  let lastGrupo = null;
-  partidos.forEach(p => {
-    if (p.grupo && p.grupo !== lastGrupo) {
-      const sep = document.createElement('div');
-      sep.style.cssText = 'padding:12px 12px 6px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;';
-      sep.textContent = 'Grupo ' + p.grupo;
-      cont.appendChild(sep);
-      lastGrupo = p.grupo;
+    cont.innerHTML = '';
+
+    if (!partidos || partidos.length === 0) {
+      cont.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗓</div><div class="empty-state-title">Sin partidos aún para esta etapa</div></div>`;
+      return;
     }
 
-    const prono = pronoMap[p.id];
-    const resultado = resMap[p.id];
-    const closed = isClosed(p.fecha, p.hora);
-    const mult = p.mult || 1;
+    let lastGrupo = null;
+    partidos.forEach(p => {
+      // Separador visual por Grupo (A al L)
+      if (p.grupo && p.grupo !== lastGrupo) {
+        const sep = document.createElement('div');
+        sep.style.cssText = 'padding:16px 14px 6px;font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;';
+        sep.textContent = 'Grupo ' + p.grupo;
+        cont.appendChild(sep);
+        lastGrupo = p.grupo;
+      }
 
-    const pLocal = prono ? prono.goles_local : null;
-    const pVisit = prono ? prono.goles_visit : null;
-    const rLocal = resultado ? resultado.goles_local : null;
-    const rVisit = resultado ? resultado.goles_visit : null;
-    const pts = calcPuntos(pLocal, pVisit, rLocal, rVisit, mult);
+      const prono = pronoMap[p.id];
+      const resultado = resMap[p.id];
+      const closed = isClosed(p.fecha, p.hora);
+      const mult = p.mult || 1;
 
-    let chipHtml = '';
-    if (resultado) {
-      if (pts === 3*mult) chipHtml = `<span class="pts-chip pts-exacto">✓ Exacto</span>`;
-      else if (pts === 1*mult) chipHtml = `<span class="pts-chip pts-resultado">~ Resultado</span>`;
-      else chipHtml = `<span class="pts-chip pts-fallo">✗ Fallado</span>`;
-    } else {
-      chipHtml = closed ? `<span class="pts-chip pts-cerrado">⏱ Cerrado</span>` : `<span class="pts-chip pts-pendiente">Pendiente</span>`;
-    }
+      const pLocal = prono ? p.goles_local : null;
+      const pVisit = prono ? p.goles_visit : null;
+      const rLocal = resultado ? resultado.goles_local : null;
+      const rVisit = resultado ? resultado.goles_visit : null;
+      const pts = calcPuntos(pLocal, pVisit, rLocal, rVisit, mult);
 
-    const card = document.createElement('div');
-    card.className = 'partido-item';
-    card.innerHTML = `
-      <div class="partido-meta"><span class="partido-meta-left">${formatFechaArg(p.fecha, p.hora)}</span></div>
-      <div class="partido-content">
-        <div class="equipo-blk"><div class="equipo-bandera">${p.local}</div><div class="equipo-nombre">${p.local_nombre}</div></div>
-        <div class="pronostico-center">
-          <div class="score-inputs">
-            <input type="number" class="score-in ${closed||resultado?'locked':''}" id="score-l-${p.id}" value="${pLocal!==null?pLocal:''}" placeholder="–">
-            <span class="score-sep">:</span>
-            <input type="number" class="score-in ${closed||resultado?'locked':''}" id="score-r-${p.id}" value="${pVisit!==null?pVisit:''}" placeholder="–">
+      let chipHtml = '';
+      if (resultado) {
+        if (pts === 3 * mult) chipHtml = `<span class="pts-chip pts-exacto">✓ Exacto</span>`;
+        else if (pts === 1 * mult) chipHtml = `<span class="pts-chip pts-resultado">~ Resultado</span>`;
+        else chipHtml = `<span class="pts-chip pts-fallo">✗ Fallado</span>`;
+      } else {
+        chipHtml = closed ? `<span class="pts-chip pts-cerrado">⏱ Cerrado</span>` : `<span class="pts-chip pts-pendiente">Pendiente</span>`;
+      }
+
+      const card = document.createElement('div');
+      card.className = 'partido-item';
+      card.innerHTML = `
+        <div class="partido-meta"><span class="partido-meta-left">${formatFechaArg(p.fecha, p.hora)}</span></div>
+        <div class="partido-content">
+          <div class="equipo-blk"><div class="equipo-bandera">${p.local}</div><div class="equipo-nombre">${p.local_nombre}</div></div>
+          <div class="pronostico-center">
+            <div class="score-inputs">
+              <input type="number" class="score-in ${closed || resultado ? 'locked' : ''}" id="score-l-${p.id}" value="${pLocal !== null ? pLocal : ''}" placeholder="–">
+              <span class="score-sep">:</span>
+              <input type="number" class="score-in ${closed || resultado ? 'locked' : ''}" id="score-r-${p.id}" value="${pVisit !== null ? pVisit : ''}" placeholder="–">
+            </div>
+            ${chipHtml}
           </div>
-          ${chipHtml}
+          <div class="equipo-blk"><div class="equipo-bandera">${p.visit}</div><div class="equipo-nombre">${p.visit_nombre}</div></div>
         </div>
-        <div class="equipo-blk"><div class="equipo-bandera">${p.visit}</div><div class="equipo-nombre">${p.visit_nombre}</div></div>
-      </div>
-      <div class="partido-footer">
-        <div class="partido-footer-left">${resultado ? `Real: ${rLocal}-${rVisit}` : 'Cierra 1h antes'}</div>
-        <div>${!closed && !resultado ? `<button class="btn-save-match" onclick="guardarProno('${p.id}')">Guardar</button>` : ''}</div>
-      </div>`;
-    cont.appendChild(card);
-  });
+        <div class="partido-footer">
+          <div class="partido-footer-left">${resultado ? `Real: ${rLocal}-${rVisit}` : 'Cierra 1h antes'}</div>
+          <div>${!closed && !resultado ? `<button class="btn-save-match" onclick="guardarProno('${p.id}')">Guardar</button>` : ''}</div>
+        </div>`;
+      cont.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+    cont.innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Error al sincronizar el fixture</div></div>`;
+  }
 }
 
 async function guardarProno(partidoId) {
