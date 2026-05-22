@@ -624,36 +624,60 @@ function buildEtapaTabsAdmin() {
 
 async function loadResultadosPartidos(etapa) {
   const cont = document.getElementById('resultados-partidos-list');
-  const { data: resultados } = await sb.from('resultados').select('*');
-  const resMap = {};
-  (resultados||[]).forEach(r => { resMap[r.partido_id] = r; });
+  if (!cont) return;
+  cont.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
-  const partidos = PARTIDOS.filter(p=>p.etapa===etapa);
-  cont.innerHTML = '';
+  try {
+    // 1. Bajamos los partidos reales de Supabase
+    const { data: partidos, error: partErr } = await sb
+      .from('partidos')
+      .select('*')
+      .eq('etapa', etapa)
+      .order('fecha', { ascending: true })
+      .order('hora', { ascending: true });
 
-  partidos.forEach(p => {
-    const r = resMap[p.id];
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.marginBottom = '12px';
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div>
-          <div style="font-size:14px;font-weight:700;color:var(--navy);">${p.local} ${p.local_nombre} vs ${p.visit} ${p.visit_nombre}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:3px;">${formatFecha(p.fecha, p.hora)} · ARG</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          ${r ? `<span class="badge badge-green">✓ Cargado: ${r.goles_local}-${r.goles_visit}</span>` : '<span class="badge badge-gray">Sin resultado</span>'}
-          <div class="score-pair">
-            <input type="number" class="score-box" id="res-l-${p.id}" value="${r?r.goles_local:''}" min="0" max="20" placeholder="0">
-            <span style="font-size:16px;color:var(--text3);font-weight:700;">-</span>
-            <input type="number" class="score-box" id="res-r-${p.id}" value="${r?r.goles_visit:''}" min="0" max="20" placeholder="0">
+    if (partErr) throw partErr;
+
+    // 2. Bajamos los marcadores oficiales cargados
+    const { data: resultados } = await sb.from('resultados').select('*');
+    const resMap = {};
+    (resultados||[]).forEach(r => { resMap[r.partido_id] = r; });
+
+    cont.innerHTML = '';
+
+    if (!partidos || partidos.length === 0) {
+      cont.innerHTML = '<p style="color:var(--text3);font-size:14px;padding:20px;text-align:center;">No hay partidos cargados para esta etapa.</p>';
+      return;
+    }
+
+    partidos.forEach(p => {
+      const r = resMap[p.id];
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.marginBottom = '12px';
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--navy);">${p.local} ${p.local_nombre} vs ${p.visit} ${p.visit_nombre}</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:3px;">${formatFecha(p.fecha, p.hora)} · Grupo ${p.grupo || 'N/A'}</div>
           </div>
-          <button class="btn btn-gold" onclick="guardarResultado('${p.id}')">Guardar</button>
-        </div>
-      </div>`;
-    cont.appendChild(card);
-  });
+          <div style="display:flex;align-items:center;gap:12px;">
+            ${r ? `<span class="badge badge-green">✓ Cargado: ${r.goles_local}-${r.goles_visit}</span>` : '<span class="badge badge-gray">Sin resultado</span>'}
+            <div class="score-pair">
+              <input type="number" class="score-box" id="res-l-${p.id}" value="${r?r.goles_local:''}" min="0" max="20" placeholder="0">
+              <span style="font-size:16px;color:var(--text3);font-weight:700;">-</span>
+              <input type="number" class="score-box" id="res-r-${p.id}" value="${r?r.goles_visit:''}" min="0" max="20" placeholder="0">
+            </div>
+            <button class="btn btn-gold" onclick="guardarResultado('${p.id}')">Guardar</button>
+          </div>
+        </div>`;
+      cont.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+    cont.innerHTML = '<p style="color:var(--red);font-size:14px;">Error al conectar con el fixture en Supabase.</p>';
+  }
 }
 
 async function guardarResultado(partidoId) {
