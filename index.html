@@ -6,6 +6,7 @@
 <title>Prode Mundial 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="env.js"></script>
 <style>
@@ -728,7 +729,6 @@ function isClosed(fechaStr, horaStr) {
   return now >= matchDate;
 }
 
-// Implementación de copiar código que faltaba declarar
 function copiarCodigo() {
   const display = document.getElementById('invite-code-display');
   if (!display || display.textContent === '—') return;
@@ -1231,7 +1231,8 @@ async function loadTabla() {
   const rankingPrevio = [...resultados].sort((a,b) => b.ptsPrev - a.ptsPrev);
   resultados.sort((a,b) => b.pts - a.pts || b.exactos - a.exactos);
 
-  const myRank = Fly = resultados.findIndex(r => r.usuario.id === currentUser.id);
+  // CORREGIDO ERROR DE TIPEO 'Fly ='
+  const myRank = resultados.findIndex(r => r.usuario.id === currentUser.id);
   const myData = resultados[myRank];
   const myAvatarEl = document.getElementById('tabla-my-avatar');
   if (myAvatarEl) renderAvatarEl(myAvatarEl, myData ? myData.usuario : currentUser);
@@ -1512,13 +1513,22 @@ async function abrirEspiarPronosticos(partidoId, localNombre, visitNombre) {
 }
 
 // ══════════════════════════════════════════════
-//  INIT AUTO RUN
+//  INIT AUTO RUN & REGISTRO PWA
 // ══════════════════════════════════════════════
 (async () => {
   buildEmojiGrid('avatar-emoji-grid', EMOJIS_AVATAR, 'selectedEmoji', e => { selectedEmoji = e; });
   buildEmojiGrid('grupo-emoji-grid', EMOJIS_GRUPO, 'selectedGrupoEmoji', e => { selectedGrupoEmoji = e; });
   const loggedIn = await tryAutoLogin();
   if (!loggedIn) showScreen('login');
+  
+  // Registro automático del Service Worker para modo PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('🟢 PWA Activa — Service Worker Registrado'))
+        .catch(err => console.error('🔴 Error al registrar PWA:', err));
+    });
+  }
 })();
 </script>
 </body>
