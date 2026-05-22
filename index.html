@@ -445,7 +445,89 @@ html, body, .screen, .scroll-area {
 }
 </style>
 </head>
-<div id="screen-tabla" class="screen">
+<body>
+<div id="app">
+
+  <div id="screen-login" class="screen active" style="display: flex; flex-direction: column;">
+    <div class="login-logo">PRODE<br>MUNDIAL<br>2026</div>
+    <div class="login-sub">Competí con tus amigos 🏆</div>
+
+    <div class="login-card">
+      <h2>Crear tu perfil</h2>
+
+      <div class="field">
+        <label>Tu nombre o apodo</label>
+        <input type="text" id="login-nombre" placeholder="Ej: Nacho, Sofi, El Tano..." maxlength="20">
+      </div>
+
+      <div class="field" style="margin-bottom: 16px;">
+        <label>Contraseña de acceso</label>
+        <input type="password" id="login-password" placeholder="Mínimo 4 caracteres" style="width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 12px 14px; color: white; font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none;">
+      </div>
+
+      <div class="avatar-section">
+        <label>Tu foto de perfil</label>
+        <div class="avatar-tabs">
+          <button class="avatar-tab-btn active" onclick="switchAvatarTab('emoji')">Elegir emoji</button>
+          <button class="avatar-tab-btn" onclick="switchAvatarTab('foto')">Subir foto</button>
+        </div>
+
+        <div id="avatar-emoji-grid" class="emoji-grid"></div>
+
+        <div id="avatar-foto-area" class="photo-upload-area" onclick="document.getElementById('photo-input').click()">
+          <img id="photo-preview" src="" alt="" class="photo-preview" style="display:none;">
+          <div id="upload-hint" class="upload-hint">📷 Tocá para elegir una foto</div>
+          <input type="file" id="photo-input" accept="image/*">
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-ingresar" onclick="doLogin()" disabled>Ingresar →</button>
+    </div>
+  </div>
+
+  <div id="screen-grupos" class="screen" style="display: none;">
+    <div class="app-header">
+      <div>
+        <div class="app-header-title">MIS GRUPOS</div>
+        <div class="app-header-sub" id="header-user-name">—</div>
+      </div>
+      <div id="header-avatar" style="width:36px;height:36px;border-radius:50%;background:var(--navy2);display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid var(--gold);overflow:hidden;"></div>
+    </div>
+
+    <div class="scroll-area" id="grupos-scroll">
+      <div class="grupos-header">
+        <h1>Grupos</h1>
+        <p>Elegí con quién querés competir</p>
+      </div>
+      <div id="grupos-list"></div>
+      <div style="margin: 0 16px 8px;">
+        <button class="btn-crear-grupo" onclick="openCrearGrupo()">+ Crear nuevo grupo</button>
+      </div>
+      <div style="margin: 8px 16px 0;">
+        <button class="btn-crear-grupo" style="background:var(--cream2);color:var(--navy);" onclick="openJoinGrupo()">Unirse con código</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-pronosticos" class="screen" style="display: none;">
+    <div class="app-header">
+      <div>
+        <div class="app-header-title" id="prono-grupo-name">PRONÓSTICOS</div>
+        <div class="app-header-sub" id="prono-grupo-sub">—</div>
+      </div>
+      <button onclick="goBack()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:22px;cursor:pointer;">‹</button>
+    </div>
+    <div id="banner-pronosticos" class="banner-slot" style="display:none;margin:0;border-radius:0;">
+      <img id="banner-prono-img" src="" alt="Banner">
+    </div>
+    <div class="etapa-tabs" id="etapa-tabs"></div>
+    <div class="scroll-area" id="pronosticos-scroll">
+      <div style="height:10px;"></div>
+      <div id="partidos-list"></div>
+    </div>
+  </div>
+
+  <div id="screen-tabla" class="screen" style="display: none;">
     <div class="app-header">
       <div>
         <div class="app-header-title" id="tabla-grupo-name">TABLA</div>
@@ -519,6 +601,69 @@ html, body, .screen, .scroll-area {
     </div>
   </div>
 
+  <div class="bottom-nav" id="bottom-nav" style="display:none;">
+    <button class="nav-btn" id="nav-grupos" onclick="showMainScreen('grupos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
+      <span class="nav-label">Grupos</span>
+    </button>
+    <button class="nav-btn" id="nav-pronosticos" onclick="showMainScreen('pronosticos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+      <span class="nav-label">Pronósticos</span>
+    </button>
+    <button class="nav-btn" id="nav-perfil" onclick="showMainScreen('perfil')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span class="nav-label">Perfil</span>
+    </button>
+  </div>
+
+  <div class="modal-overlay" id="modal-crear-grupo">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Crear grupo</div>
+      <div class="modal-field">
+        <label>Nombre del grupo</label>
+        <input type="text" id="nuevo-grupo-nombre" placeholder="Ej: Amigos del trabajo" maxlength="30">
+      </div>
+      <div class="modal-field">
+        <label>Ícono del grupo</label>
+        <div class="emoji-grid-modal" id="grupo-emoji-grid"></div>
+      </div>
+      <button class="btn-primary" onclick="crearGrupo()">Crear grupo</button>
+      <button onclick="closeModal('modal-crear-grupo')" style="width:100%;margin-top:10px;padding:12px;background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-join-grupo">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Unirse a un grupo</div>
+      <div class="modal-field">
+        <label>Código del grupo</label>
+        <input type="text" id="join-code-input" placeholder="Ej: ABC123" maxlength="6" style="text-transform:uppercase;letter-spacing:4px;font-size:22px;text-align:center;">
+      </div>
+      <button class="btn-primary" onclick="joinGrupo()">Unirse →</button>
+      <button onclick="closeModal('modal-join-grupo')" style="width:100%;margin-top:10px;padding:12px;background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancelar</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-invite">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Invitar amigos</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:4px;">Compartí este código para que se unan a <strong id="invite-grupo-name">—</strong></p>
+      <div class="invite-code">
+        <div class="invite-code-num" id="invite-code-display">—</div>
+        <div class="invite-code-hint">Código de invitación</div>
+      </div>
+      <button class="btn-copy" onclick="copiarCodigo()">📋 Copiar código</button>
+      <button onclick="closeModal('modal-invite')" style="width:100%;margin-top:16px;padding:12px;background:none;border:none;color:var(--text2);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cerrar</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+</div> 
+</body>>
 <script>
 // ══════════════════════════════════════════════
 //  CONFIG SUPABASE — reemplazá con tus keys
