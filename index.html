@@ -43,11 +43,30 @@ body {
 .scroll-area { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 80px; }
 
 /* ─── BOTTOM NAV ─── */
+/* ─── BOTTOM NAV (CORREGIDO Y SEGURO) ─── */
 .bottom-nav {
-  display: flex; background: var(--navy); height: 64px;
+  display: flex;
+  background: var(--navy);
+  
+  /* Eliminamos height fijo y usamos padding para que se adapte */
+  height: auto; 
+  min-height: 70px; /* Altura mínima de seguridad */
+
   border-top: 1px solid rgba(255,255,255,0.08);
-  box-sizing: border-box; padding: 4px 10px; align-items: center;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  box-sizing: border-box;
+  padding: 8px 10px; /* Más padding vertical */
+  align-items: flex-start; /* Alinea los iconos hacia arriba para dejar espacio abajo */
+  
+  /* Esta línea es clave para iOS: respeta el espacio de seguridad inferior */
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); 
+  
+  position: fixed; /* Asegura que se quede abajo */
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 430px; /* Mismo ancho máximo que la app */
+  margin: 0 auto;
+  z-index: 50;
 }
 .nav-btn {
   flex: 1; display: flex; flex-direction: column; align-items: center;
@@ -77,31 +96,37 @@ body {
   padding: 32px 24px;
   gap: 0;
 }
+/* Contenedor principal de la cabecera del login */
 .login-header-wrap {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column; /* Cambiado a columna para apilar logo sobre texto */
+  align-items: center; /* Centrado horizontal */
+  justify-content: center;
   width: 100%;
   max-width: 360px;
-  margin-bottom: 12px;
-  gap: 16px;
+  margin-bottom: 24px;
+  gap: 16px; /* Espacio entre logo y texto */
 }
+
+/* Estilo del logo agrandado y con fondo fusionado */
+.login-avatar-img {
+  width: 160px; /* Más grande (estaba en 110px) */
+  height: 160px;
+  object-fit: cover; /* Ajuste para que ocupe todo el espacio */
+  background-color: var(--navy2); /* Fondo azul oscuro de la app para tapar los cuadraditos */
+  border: 4px solid var(--white); /* Borde blanco un poco más grueso */
+  border-radius: 24px; /* Esquinas más redondeadas */
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4); /* Sombra más pronunciada */
+}
+
+/* Ajuste del texto para que esté centrado debajo del logo */
 .login-logo {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 46px; 
   color: var(--gold);
   letter-spacing: 2px; 
-  line-height: 1.05;
-  text-align: left;
-}
-.login-avatar-img {
-  width: 110px;
-  height: 110px;
-  object-fit: contain;
-  background: var(--navy2);
-  border: 3.5px solid var(--white);
-  border-radius: 18px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  line-height: 1; /* Título alineado al centro */
+  text-align: center; /* Centrado horizontal */
 }
 .login-sub { 
   color: rgba(255,255,255,0.5); 
