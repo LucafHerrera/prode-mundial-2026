@@ -464,22 +464,40 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 <div class="toast-admin" id="toast-admin"></div>
 
 <script>
-  console.log("SCRIPT INICIO");
+console.log("SCRIPT INICIO");
 const SUPABASE_URL = window.ENV.SUPABASE_URL;
 const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Guardamos los partidos que bajemos de la Base de Datos para usarlos como referencia global
+let partidosDeBaseDeDatos = []; 
+let currentEtapa = 'grupos';
+
 window.addEventListener('load', () => {
   if (sessionStorage.getItem('admin_ok') === 'true') {
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-app').style.display = 'flex';
-    loadDashboard();
-    buildEtapaTabsAdmin();
-    loadResultadosPartidos('grupos');
-    populatePartidoSelect();
+    initAdminPanel();
   }
 });
+
+async function initAdminPanel() {
+  await cargarPartidosDeSupabase(); // Primero bajamos el fixture real de internet
+  loadDashboard();
+  buildEtapaTabsAdmin();
+  loadResultadosPartidos('grupos');
+  populatePartidoSelect();
+}
+
+// Función clave para sincronizar los partidos reales y sus etapas/multiplicadores
+async function cargarPartidosDeSupabase() {
+  const { data, error } = await sb.from('partidos').select('*');
+  if (!error && data) {
+    partidosDeBaseDeDatos = data;
+  }
+}
+
 function logoutAdmin() {
   sessionStorage.removeItem('admin_ok');
   location.reload();
@@ -491,31 +509,12 @@ const ETAPAS = [
   { id:'tercero', label:'3er Puesto' }, { id:'final', label:'Final' },
 ];
 
-const PARTIDOS = [
-  { id:'g1', etapa:'grupos', local:'🇲🇽', local_nombre:'México', visit:'🇨🇦', visit_nombre:'Canadá', fecha:'2026-06-11', hora:'18:00' },
-  { id:'g2', etapa:'grupos', local:'🇺🇸', local_nombre:'EE.UU.', visit:'🇷🇸', visit_nombre:'Serbia', fecha:'2026-06-11', hora:'21:00' },
-  { id:'g3', etapa:'grupos', local:'🇦🇷', local_nombre:'Argentina', visit:'🇳🇬', visit_nombre:'Nigeria', fecha:'2026-06-12', hora:'15:00' },
-  { id:'g4', etapa:'grupos', local:'🇧🇷', local_nombre:'Brasil', visit:'🇩🇪', visit_nombre:'Alemania', fecha:'2026-06-12', hora:'18:00' },
-  { id:'g5', etapa:'grupos', local:'🇫🇷', local_nombre:'Francia', visit:'🇲🇦', visit_nombre:'Marruecos', fecha:'2026-06-13', hora:'15:00' },
-  { id:'g6', etapa:'grupos', local:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', local_nombre:'Inglaterra', visit:'🇵🇹', visit_nombre:'Portugal', fecha:'2026-06-13', hora:'18:00' },
-  { id:'g7', etapa:'grupos', local:'🇪🇸', local_nombre:'España', visit:'🇯🇵', visit_nombre:'Japón', fecha:'2026-06-14', hora:'15:00' },
-  { id:'g8', etapa:'grupos', local:'🇳🇱', local_nombre:'Países Bajos', visit:'🇸🇳', visit_nombre:'Senegal', fecha:'2026-06-14', hora:'18:00' },
-  { id:'o1', etapa:'octavos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-01', hora:'15:00' },
-  { id:'o2', etapa:'octavos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-01', hora:'19:00' },
-  { id:'o3', etapa:'octavos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-02', hora:'15:00' },
-  { id:'o4', etapa:'octavos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-02', hora:'19:00' },
-  { id:'q1', etapa:'cuartos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-08', hora:'19:00' },
-  { id:'q2', etapa:'cuartos', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-09', hora:'19:00' },
-  { id:'s1', etapa:'semifinal', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-14', hora:'19:00' },
-  { id:'s2', etapa:'semifinal', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-15', hora:'19:00' },
-  { id:'t1', etapa:'tercero', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-18', hora:'15:00' },
-  { id:'f1', etapa:'final', local:'⚽', local_nombre:'TBD', visit:'⚽', visit_nombre:'TBD', fecha:'2026-07-19', hora:'19:00' },
-];
-
 function toast(msg, ms=2500) {
   const t = document.getElementById('toast-admin');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), ms);
+  if (t) {
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), ms);
+  }
 }
 
 async function doAdminLogin() {
@@ -528,31 +527,29 @@ async function doAdminLogin() {
     .single();
 
   if (error) {
-    toast('Error de autenticación');
+    toast('Error de autenticación o tabla admin_config inexistente');
     return;
   }
 
   if (pwd === data.admin_password) {
     sessionStorage.setItem('admin_ok', 'true');
-
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-app').style.display = 'flex';
-
-    loadDashboard();
-    buildEtapaTabsAdmin();
-    loadResultadosPartidos('grupos');
-    populatePartidoSelect();
+    initAdminPanel();
   } else {
     toast('❌ Contraseña incorrecta');
   }
 }
 
-
 function showPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
+  
+  const targetPanel = document.getElementById('panel-'+id);
+  if (targetPanel) targetPanel.classList.add('active');
+  
   if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  
   if (id==='dashboard') loadDashboard();
   if (id==='usuarios') loadUsuarios();
   if (id==='grupos') loadGruposAdmin();
@@ -571,9 +568,9 @@ async function loadDashboard() {
   document.getElementById('stat-pronos').textContent = cp||0;
   document.getElementById('stat-partidos-cargados').textContent = cr||0;
 
-  // Próximos partidos
+  // Próximos partidos dinámicos desde la Base de Datos
   const now = new Date();
-  const proximos = PARTIDOS.filter(p => {
+  const proximos = partidosDeBaseDeDatos.filter(p => {
     const [y,m,d] = p.fecha.split('-').map(Number);
     const [h,min] = p.hora.split(':').map(Number);
     const dt = new Date(y,m-1,d,h,min);
@@ -581,25 +578,29 @@ async function loadDashboard() {
   }).slice(0,5);
 
   const ppList = document.getElementById('proximos-partidos-list');
-  if (proximos.length===0) { ppList.innerHTML = '<p style="color:var(--text3);font-size:14px;">No hay partidos próximos.</p>'; return; }
-  ppList.innerHTML = `<table class="data-table"><thead><tr><th>Partido</th><th>Fecha ARG</th><th>Estado</th></tr></thead><tbody>
-    ${proximos.map(p => `<tr>
-      <td>${p.local} ${p.local_nombre} vs ${p.visit} ${p.visit_nombre}</td>
-      <td>${formatFecha(p.fecha, p.hora)}</td>
-      <td><span class="badge badge-amber">Por jugar</span></td>
-    </tr>`).join('')}
-  </tbody></table>`;
+  if (proximos.length===0) { 
+    ppList.innerHTML = '<p style="color:var(--text3);font-size:14px;">No hay partidos próximos.</p>'; 
+  } else {
+    ppList.innerHTML = `<table class="data-table"><thead><tr><th>Partido</th><th>Fecha ARG</th><th>Estado</th></tr></thead><tbody>
+      ${proximos.map(p => `<tr>
+        <td>${p.local} ${p.local_nombre} vs ${p.visit} ${p.visit_nombre}</td>
+        <td>${formatFecha(p.fecha, p.hora)}</td>
+        <td><span class="badge badge-amber">Por jugar</span></td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  }
 
   // Últimos usuarios
   const { data: users } = await sb.from('usuarios').select('*').order('created_at',{ascending:false}).limit(5);
   const uuList = document.getElementById('ultimos-usuarios');
   if (!users||users.length===0) { uuList.innerHTML='<p style="color:var(--text3);font-size:14px;">Sin usuarios.</p>'; return; }
   uuList.innerHTML = `<table class="data-table"><thead><tr><th>Usuario</th><th>Avatar</th><th>Registrado</th></tr></thead><tbody>
-    ${users.map(u=>`<tr><td><strong>${u.nombre}</strong></td><td>${u.emoji||'📷'}</td><td style="color:var(--text3);font-size:12px;">${new Date(u.created_at).toLocaleDateString('es-AR')}</td></tr>`).join('')}
+    ${users.map(u=>`<tr><td><strong>${u.nombre}</strong></td><td>${u.foto_url ? `<img src="${u.foto_url}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : u.emoji||'⚽'}</td><td style="color:var(--text3);font-size:12px;">${new Date(u.created_at).toLocaleDateString('es-AR')}</td></tr>`).join('')}
   </tbody></table>`;
 }
 
 function formatFecha(fechaStr, hora) {
+  if (!fechaStr) return '';
   const [y,m,d] = fechaStr.split('-').map(Number);
   const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   return `${d} ${meses[m-1]} · ${hora}`;
@@ -611,11 +612,12 @@ function buildEtapaTabsAdmin() {
   cont.innerHTML = '';
   ETAPAS.forEach((e,i) => {
     const btn = document.createElement('button');
-    btn.className = 'section-tab'+(i===0?' active':'');
+    btn.className = 'section-tab'+(e.id === currentEtapa ? ' active' : '');
     btn.textContent = e.label;
     btn.onclick = () => {
       document.querySelectorAll('#etapa-tabs-admin .section-tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
+      currentEtapa = e.id;
       loadResultadosPartidos(e.id);
     };
     cont.appendChild(btn);
@@ -628,7 +630,6 @@ async function loadResultadosPartidos(etapa) {
   cont.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div></div>';
 
   try {
-    // 1. Bajamos los partidos reales de Supabase
     const { data: partidos, error: partErr } = await sb
       .from('partidos')
       .select('*')
@@ -638,7 +639,6 @@ async function loadResultadosPartidos(etapa) {
 
     if (partErr) throw partErr;
 
-    // 2. Bajamos los marcadores oficiales cargados
     const { data: resultados } = await sb.from('resultados').select('*');
     const resMap = {};
     (resultados||[]).forEach(r => { resMap[r.partido_id] = r; });
@@ -706,19 +706,12 @@ async function guardarResultado(partidoId) {
     return toast('Error guardando resultado');
   }
 
-  // recalcular puntos
+  // Recalcular puntos en vivo
   await recalcPuntos(partidoId);
 
   toast('✅ Resultado guardado y puntos actualizados');
-
-  const activeBtn = document.querySelector('#etapa-tabs-admin .section-tab.active');
-  const etapaActiva = ETAPAS.find(e => e.label === activeBtn.textContent);
-
-  if (etapaActiva) {
-    loadResultadosPartidos(etapaActiva.id);
-  }
+  loadResultadosPartidos(currentEtapa);
 }
-console.log("SCRIPT MITAD");
 
 // ─── USUARIOS ───
 async function loadUsuarios() {
@@ -727,7 +720,7 @@ async function loadUsuarios() {
   if (!users||users.length===0) { tbody.innerHTML='<tr><td colspan="5" style="color:var(--text3)">Sin usuarios</td></tr>'; return; }
 
   tbody.innerHTML = users.map(u => `<tr>
-    <td style="font-size:24px;">${u.foto_url?`<img src="${u.foto_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`:u.emoji||'⚽'}</td>
+    <td>${u.foto_url?`<img src="${u.foto_url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border);">`: `<span style="font-size:22px;">${u.emoji||'⚽'}</span>`}</td>
     <td><strong>${u.nombre}</strong></td>
     <td>—</td>
     <td>—</td>
@@ -737,8 +730,8 @@ async function loadUsuarios() {
 
 async function banUser(id, nombre) {
   if (!confirm(`¿Suspender a ${nombre}?`)) return;
-  await sb.from('usuarios').update({ suspendido: true }).eq('id', id);
-  toast('✓ Usuario suspendido'); loadUsuarios();
+  await sb.from('usuarios').delete().eq('id', id); // O update si creaste columna suspendido
+  toast('✓ Usuario removido'); loadUsuarios();
 }
 
 // ─── GRUPOS ADMIN ───
@@ -762,7 +755,6 @@ async function loadGruposAdmin() {
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-outline" style="font-size:12px;" onclick="toggleBannerGrupo('${g.id}')">Banner</button>
           <button class="btn btn-danger" style="font-size:12px;" onclick="deleteGrupo('${g.id}','${g.nombre}')">Eliminar</button>
         </div>
       </div>`;
@@ -771,9 +763,8 @@ async function loadGruposAdmin() {
 }
 
 async function deleteGrupo(id, nombre) {
-  if (!confirm(`¿Eliminar el grupo "${nombre}"? Esto eliminará todos sus pronósticos.`)) return;
+  if (!confirm(`¿Eliminar el grupo "${nombre}"? Esto desvinculará a los miembros.`)) return;
   await sb.from('grupo_miembros').delete().eq('grupo_id',id);
-  await sb.from('pronosticos').delete().eq('grupo_id',id);
   await sb.from('grupos').delete().eq('id',id);
   toast('Grupo eliminado'); loadGruposAdmin();
 }
@@ -806,21 +797,15 @@ async function saveBanner(type) {
   }
 
   if (!finalUrl) return toast('Subí una imagen o pegá una URL');
-
-  const grupoId = type==='main' ? (document.getElementById('banner-main-grupo')?.value||null) : null;
-
-  await sb.from('banners').upsert({ tipo: type, url: finalUrl, grupo_id: grupoId||null }, {onConflict:'tipo'});
+  await sb.from('banners').upsert({ tipo: type, url: finalUrl }, {onConflict:'tipo'});
   toast('✅ Banner guardado');
-
-  if (grupoId) {
-    await sb.from('grupos').update({ banner_url: finalUrl }).eq('id', grupoId);
-  }
+  loadBannersAdmin();
 }
 
 async function loadBannersAdmin() {
   const { data: banners } = await sb.from('banners').select('*');
   const cont = document.getElementById('banners-list');
-  if (!banners||banners.length===0) return;
+  if (!banners||banners.length===0) { cont.innerHTML = '<p style="color:var(--text3)">Sin banners.</p>'; return; }
   cont.innerHTML = banners.map(b=>`
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
       <img src="${b.url}" style="width:120px;height:50px;object-fit:cover;border-radius:6px;">
@@ -835,9 +820,10 @@ async function deleteBanner(id) {
 }
 
 // ─── PARTIDOS EDIT ───
-function populatePartidoSelect() {
+async function populatePartidoSelect() {
   const sel = document.getElementById('edit-partido-select');
-  const elim = PARTIDOS.filter(p=>p.etapa!=='grupos');
+  if (partidosDeBaseDeDatos.length === 0) await cargarPartidosDeSupabase();
+  const elim = partidosDeBaseDeDatos.filter(p=>p.etapa!=='grupos');
   sel.innerHTML = '<option value="">— Seleccioná un partido —</option>' +
     elim.map(p=>`<option value="${p.id}">${p.etapa.toUpperCase()} · ${p.local_nombre} vs ${p.visit_nombre}</option>`).join('');
 }
@@ -846,7 +832,7 @@ function loadPartidoEdit() {
   const pid = document.getElementById('edit-partido-select').value;
   const form = document.getElementById('edit-partido-form');
   if (!pid) { form.style.display='none'; return; }
-  const p = PARTIDOS.find(pt=>pt.id===pid);
+  const p = partidosDeBaseDeDatos.find(pt=>pt.id == pid);
   if (!p) return;
   form.style.display='grid';
   document.getElementById('edit-local-bandera').value = p.local;
@@ -863,11 +849,14 @@ async function guardarPartidoEdit() {
   const visit = document.getElementById('edit-visit-bandera').value;
   const visitNombre = document.getElementById('edit-visit-nombre').value;
 
-  // Guardar en Supabase (tabla partido_overrides)
-  await sb.from('partido_overrides').upsert({
-    partido_id: pid, local, local_nombre: localNombre, visit, visit_nombre: visitNombre
-  }, { onConflict: 'partido_id' });
-  toast('✅ Partido actualizado. Los usuarios verán los cambios.');
+  // Actualizamos el partido directo en la tabla partidos principal de Supabase
+  await sb.from('partidos').update({ 
+    local, local_nombre: localNombre, visit, visit_nombre: visitNombre 
+  }).eq('id', pid);
+
+  toast('✅ Partido actualizado. Sincronizado con los usuarios.');
+  await cargarPartidosDeSupabase();
+  populatePartidoSelect();
 }
 
 // ─── CONFIG ───
@@ -881,26 +870,32 @@ function saveConfig() {
     multFinal: document.getElementById('cfg-mult-final').value,
   };
   localStorage.setItem('prode_config', JSON.stringify(cfg));
-  toast('✅ Configuración guardada');
+  toast('✅ Configuración local guardada');
 }
 
-function changeAdminPwd() {
+async function changeAdminPwd() {
   const pwd = document.getElementById('new-admin-pwd').value;
-  if (pwd.length < 6) return toast('La contraseña debe tener al menos 6 caracteres');
-  localStorage.setItem(ADMIN_PWD_KEY, pwd);
-  toast('✅ Contraseña actualizada');
+  if (pwd.length < 4) return toast('La contraseña debe tener al menos 4 caracteres');
+  
+  // Guardamos en Supabase para que cambie de verdad el inicio de sesión
+  const { error } = await sb.from('admin_config').update({ admin_password: pwd }).eq('id', 'main');
+  if (error) return toast('Error al actualizar contraseña en base de datos');
+  
+  toast('✅ Contraseña de Base de Datos actualizada');
+  document.getElementById('new-admin-pwd').value = '';
 }
 
 async function resetPronos() {
-  await sb.from('pronosticos').delete().neq('id','00000000-0000-0000-0000-000000000000');
+  await sb.from('pronosticos').delete().neq('usuario_id','00000000-0000-0000-0000-000000000000');
   toast('✅ Pronósticos reseteados');
 }
 async function resetResultados() {
   await sb.from('resultados').delete().neq('partido_id','__none__');
   toast('✅ Resultados reseteados');
+  loadResultadosPartidos(currentEtapa);
 }
 
-// Lógica de cálculo de puntos real, definitiva y ultra segura
+// ─── RECALCULO DE PUNTOS SEGURO ───
 async function recalcPuntos(partidoId) {
   const { data: resultado, error } = await sb
     .from('resultados')
@@ -920,59 +915,49 @@ async function recalcPuntos(partidoId) {
   const gLocal = resultado.goles_local;
   const gVisit = resultado.goles_visit;
 
-  // Averiguamos en qué etapa está el partido para saber si tiene multiplicador
-  const partidoInfo = PARTIDOS.find(p => p.id === partidoId);
+  // Buscamos el partido en los datos sincronizados de Supabase
+  const partidoInfo = partidosDeBaseDeDatos.find(p => p.id == partidoId);
   let mult = 1;
   
-  // Traemos la configuración de puntos del localStorage o usamos los de por defecto
   const configLocal = localStorage.getItem('prode_config');
   const cfg = configLocal ? JSON.parse(configLocal) : { exacto: 3, resultado: 1, multOct: 2, multQrt: 2, multSemi: 3, multFinal: 4 };
 
-  if (partidoInfo) {
-    if (partidoInfo.etapa === 'octavos') mult = parseInt(cfg.multOct);
-    if (partidoInfo.etapa === 'cuartos') mult = parseInt(cfg.multQrt);
-    if (partidoInfo.etapa === 'semifinal') mult = parseInt(cfg.multSemi);
-    if (partidoInfo.etapa === 'final') mult = parseInt(cfg.multFinal);
+  if (partInfo = partidoInfo) {
+    if (partInfo.etapa === 'octavos') mult = parseInt(cfg.multOct) || 2;
+    if (partInfo.etapa === 'cuartos') mult = parseInt(cfg.multQrt) || 2;
+    if (partInfo.etapa === 'semifinal') mult = parseInt(cfg.multSemi) || 3;
+    if (partInfo.etapa === 'final') mult = parseInt(cfg.multFinal) || 4;
   }
 
-  const ptsExacto = parseInt(cfg.exacto) * mult;
-  const ptsResultado = parseInt(cfg.resultado) * mult;
+  const ptsExacto = (parseInt(cfg.exacto) || 3) * mult;
+  const ptsResultado = (parseInt(cfg.resultado) || 1) * mult;
 
   for (const p of pronosticos) {
     let puntos = 0;
 
-    // Caso 1: Acierto Exacto
     if (p.goles_local === gLocal && p.goles_visit === gVisit) {
       puntos = ptsExacto;
     } else {
-      // Caso 2: Acierto de quién gana o si empatan (Resultado)
       const pronoRes = Math.sign(p.goles_local - p.goles_visit);
       const realRes = Math.sign(gLocal - gVisit);
-
       if (pronoRes === realRes) {
         puntos = ptsResultado;
       }
     }
 
-    // ACTUALIZACIÓN ROBUSTA: Filtramos usando las llaves compuestas lógicas del negocio
-    const { error: upErr } = await sb
+    // CORRECCIÓN ULTRA CLAVE: Actualiza usando únicamente partido_id y usuario_id.
+    // Quitamos el filtro de grupo_id ya que el pronóstico es global por usuario.
+    await sb
       .from('pronosticos')
       .update({ puntos: puntos })
       .eq('partido_id', partidoId)
-      .eq('usuario_id', p.usuario_id)
-      .eq('grupo_id', p.grupo_id);
-
-    if (upErr) {
-      console.error("Error crítico al actualizar puntos:", upErr);
-    }
+      .eq('usuario_id', p.usuario_id);
   }
 
-  console.log('✅ Puntos recalculados e impactados con llaves compuestas OK');
+  console.log('✅ Puntos globales reliquidados con éxito');
 }
 
-// Registramos la función correctamente en la ventana global
 window.recalcPuntos = recalcPuntos;
-console.log("🟢 EXPORT:", typeof window.recalcPuntos);
 console.log("SCRIPT FINAL");
 </script>
 </body>
