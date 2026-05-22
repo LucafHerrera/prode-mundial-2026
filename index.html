@@ -218,11 +218,11 @@ body {
 }
 .equipo-blk { flex: 1; text-align: center; }
 .equipo-bandera {
-  font-size: 32px; /* Tamaño generoso para las banderas en PC */
+  font-size: 36px; /* Las dejamos bien grandes y nítidas */
   line-height: 1;
   margin-bottom: 5px;
-  /* Aseguramos que la fuente sea la DM Sans que ya tenés cargada */
-  font-family: 'DM Sans', sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  /* Esto obliga a Windows y Mac a usar sus motores de emojis nativos en vez de letras */
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
 }
 .equipo-nombre { font-size: 12px; font-weight: 600; color: var(--navy); }
 .pronostico-center {
@@ -1109,7 +1109,7 @@ async function loadPartidos(etapa) {
       card.innerHTML = `
         <div class="partido-meta"><span class="partido-meta-left">${formatFechaArg(p.fecha, p.hora)}</span></div>
         <div class="partido-content">
-          <div class="equipo-blk"><div class="equipo-bandera">${getFlagEmoji(p.local)}</div><div class="equipo-nombre">${p.local_nombre}</div></div>
+          <div class="equipo-blk"><div class="equipo-bandera">${p.local}</div><div class="equipo-nombre">${p.local_nombre}</div></div>
           <div class="pronostico-center">
             <div class="score-inputs">
               <input type="number" class="score-in ${closed || resultado ? 'locked' : ''}" id="score-l-${p.id}" value="${pLocal !== null ? pLocal : ''}" placeholder="–">
