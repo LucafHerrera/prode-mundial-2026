@@ -217,7 +217,13 @@ body {
   display: flex; align-items: center; gap: 6px;
 }
 .equipo-blk { flex: 1; text-align: center; }
-.equipo-bandera { font-size: 32px; line-height: 1; margin-bottom: 5px; }
+.equipo-bandera {
+  font-size: 32px; /* Tamaño generoso para las banderas en PC */
+  line-height: 1;
+  margin-bottom: 5px;
+  /* Aseguramos que la fuente sea la DM Sans que ya tenés cargada */
+  font-family: 'DM Sans', sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+}
 .equipo-nombre { font-size: 12px; font-weight: 600; color: var(--navy); }
 .pronostico-center {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -771,20 +777,27 @@ function calcPuntos(pLocal, pVisit, rLocal, rVisit, mult) {
 // ══════════════════════════════════════════════
 //  AVATAR
 // ══════════════════════════════════════════════
+// Función para armar grillas de emojis (Login y Modal Grupos)
 function buildEmojiGrid(containerId, emojis, selectedVar, onSelect) {
   const el = document.getElementById(containerId);
-  if (!el) return; el.innerHTML = '';
+  if (!el) return;
+  el.innerHTML = '';
+  
+  // Obtenemos el valor actual del emoji seleccionado de forma segura
+  const currentSelected = typeof window[selectedVar] !== 'undefined' ? window[selectedVar] : selectedEmoji;
+
   emojis.forEach(e => {
     const btn = document.createElement('button');
+    // Si el contenedor es el del modal de grupos, usa otra clase
     btn.className = containerId.includes('modal') ? 'emoji-opt-modal' : 'emoji-opt';
     btn.textContent = e;
     
-    // Si coincide con el seleccionado, le clava la clase selected
-    if (e === window[selectedVar]) btn.classList.add('selected');
+    // CORRECCIÓN CLAVE: Compara el emoji actual con el seleccionado para ponerle la clase
+    if (e === currentSelected) btn.classList.add('selected');
     
     btn.onclick = () => { 
-      onSelect(e); 
-      buildEmojiGrid(containerId, emojis, selectedVar, onSelect); 
+      onSelect(e); // Guarda el nuevo emoji seleccionado
+      buildEmojiGrid(containerId, emojis, selectedVar, onSelect); // Vuelve a dibujar para mover el borde amarillo
     };
     el.appendChild(btn);
   });
@@ -1018,7 +1031,15 @@ function buildEtapaTabs() {
     cont.appendChild(btn);
   });
 }
-
+// Función auxiliar para convertir códigos de país en emojis de banderas
+function getFlagEmoji(countryCode) {
+  if (!countryCode || countryCode.length < 2) return '⚽';
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
 async function loadPartidos(etapa) {
   const cont = document.getElementById('partidos-list');
   if (!cont) return;
@@ -1088,7 +1109,7 @@ async function loadPartidos(etapa) {
       card.innerHTML = `
         <div class="partido-meta"><span class="partido-meta-left">${formatFechaArg(p.fecha, p.hora)}</span></div>
         <div class="partido-content">
-          <div class="equipo-blk"><div class="equipo-bandera">${p.local}</div><div class="equipo-nombre">${p.local_nombre}</div></div>
+          <div class="equipo-blk"><div class="equipo-bandera">${getFlagEmoji(p.local)}</div><div class="equipo-nombre">${p.local_nombre}</div></div>
           <div class="pronostico-center">
             <div class="score-inputs">
               <input type="number" class="score-in ${closed || resultado ? 'locked' : ''}" id="score-l-${p.id}" value="${pLocal !== null ? pLocal : ''}" placeholder="–">
