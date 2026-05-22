@@ -556,27 +556,18 @@ html, body, .screen, .scroll-area {
   </div>
 
   <!-- PERFIL -->
-  <div id="screen-perfil" class="screen">
-    <div class="app-header">
-      <div class="app-header-title">MI PERFIL</div>
-    </div>
-    <div class="scroll-area">
-      <div class="perfil-hero">
-        <div class="perfil-avatar" id="perfil-avatar-big"></div>
-        <div class="perfil-nombre" id="perfil-nombre">—</div>
-        <div class="perfil-stats">
-          <div class="perfil-stat"><div class="perfil-stat-num" id="ps-exactos">0</div><div class="perfil-stat-lbl">Exactos</div></div>
-          <div class="perfil-stat"><div class="perfil-stat-num" id="ps-pts">0</div><div class="perfil-stat-lbl">Puntos</div></div>
-          <div class="perfil-stat"><div class="perfil-stat-num" id="ps-grupos">0</div><div class="perfil-stat-lbl">Grupos</div></div>
-        </div>
-      </div>
-      <div class="perfil-body">
-        <div class="perfil-section-title">Mi historial</div>
-        <div id="perfil-historial"></div>
-        <button class="btn-cerrar-sesion" onclick="cerrarSesion()">Cerrar sesión</button>
-      </div>
-    </div>
+  <div class="perfil-edit-avatar-box" style="margin: 16px auto; max-width: 340px; background: white; padding: 14px; border-radius: var(--radius); border: 1.5px solid var(--border); text-align: center;">
+  <div style="font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 10px;">EDITAR FOTO O AVATAR</div>
+  
+  <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
+    <button class="btn-perfil-tab" onclick="cambiarAvatarPerfil('emoji')" style="background: var(--cream); border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">Usar Emoji</button>
+    <button class="btn-perfil-tab" onclick="document.getElementById('perfil-photo-input').click()" style="background: var(--navy); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">Subir Foto</button>
   </div>
+
+  <input type="file" id="perfil-photo-input" accept="image/*" style="display: none;">
+  
+  <div id="perfil-emoji-grid" style="display: none; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 10px; max-height: 120px; overflow-y: auto;"></div>
+</div>
 
   <!-- BOTTOM NAV (hidden initially) -->
   <div class="bottom-nav" id="bottom-nav" style="display:none;">
@@ -1287,7 +1278,90 @@ async function loadPerfil() {
   if (ptsEl) ptsEl.textContent = pts;
   const gruposEl = document.getElementById('ps-grupos');
   if (gruposEl) gruposEl.textContent = grupos||0;
+
+  // ESCUCHADOR EXCLUSIVO DEL PERFIL: Detecta cuando eligen una nueva foto
+  const perfilPhotoInput = document.getElementById('perfil-photo-input');
+  if (perfilPhotoInput && !perfilPhotoInput.dataset.hasListener) {
+    perfilPhotoInput.dataset.hasListener = "true";
+    perfilPhotoInput.addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      toast('⏳ Subiendo nueva foto...');
+      try {
+        const ext = file.name.split('.').pop();
+        const filename = `avatars/${Date.now()}-${currentUser.nombre.toLowerCase().replace(/\s/g, '_')}.${ext}`;
+        
+        // 1. Subimos la foto al bucket 'prode'
+        const { error: upErr } = await sb.storage.from('prode').upload(filename, file, { cacheControl: '3600', upsert: false });
+        if (upErr) throw upErr;
+
+        // 2. Traemos su URL pública
+        const { data: publicData } = sb.storage.from('prode').getPublicUrl(filename);
+        const nuevaFotoUrl = publicData.publicUrl;
+
+        // 3. Actualizamos la tabla de usuarios anulando el emoji viejo
+        const { error: dbErr } = await sb.from('usuarios').update({ foto_url: nuevaFotoUrl, emoji: null }).eq('id', currentUser.id);
+        if (dbErr) throw dbErr;
+
+        // 4. Actualizamos el estado global de la app y refrescamos la vista
+        currentUser.foto_url = nuevaFotoUrl;
+        currentUser.emoji = null;
+        renderAvatarEl(document.getElementById('perfil-avatar-big'), currentUser);
+        renderAvatarEl(document.getElementById('header-avatar'), currentUser);
+        document.getElementById('perfil-emoji-grid').style.display = 'none';
+        toast('✅ Foto de perfil actualizada');
+      } catch (err) {
+        console.error(err);
+        toast('❌ Error al actualizar foto: ' + err.message);
+      }
+    });
+  }
 }
+// Función para cambiar el avatar del perfil por un emoji en tiempo real
+function cambiarAvatarPerfil(action) {
+  const grid = document.getElementById('perfil-emoji-grid');
+  if (!grid) return;
+
+  if (grid.style.display === 'grid') {
+    grid.style.display = 'none';
+    return;
+  }
+
+  grid.style.display = 'grid';
+  grid.innerHTML = '';
+
+  // EMOJIS_AVATAR es tu array con la pelota, la copa, el león, etc.
+  EMOJIS_AVATAR.forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-opt';
+    btn.textContent = e;
+    if (e === currentUser.emoji) btn.classList.add('selected');
+
+    btn.onclick = async () => {
+      toast('⏳ Guardando avatar...');
+      try {
+        // Actualizamos en Supabase guardando el emoji y borrando la foto anterior si existía
+        const { error } = await sb.from('usuarios').update({ emoji: e, foto_url: null }).eq('id', currentUser.id);
+        if (error) throw error;
+
+        // Seteamos los cambios en vivo en la interfaz
+        currentUser.emoji = e;
+        currentUser.foto_url = null;
+        
+        renderAvatarEl(document.getElementById('perfil-avatar-big'), currentUser);
+        renderAvatarEl(document.getElementById('header-avatar'), currentUser);
+        grid.style.display = 'none'; // Cerramos la grilla
+        toast('✅ Avatar actualizado');
+      } catch (err) {
+        console.error(err);
+        toast('❌ Error al guardar avatar');
+      }
+    };
+    grid.appendChild(btn);
+  });
+}
+
 
 function cerrarSesion() {
   localStorage.removeItem('prode_user_id');
