@@ -24,6 +24,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .sidebar {
   width: 240px; background: var(--navy); display: flex; flex-direction: column;
   padding: 0; flex-shrink: 0; position: fixed; height: 100vh; overflow-y: auto;
+  z-index: 40;
 }
 .sidebar-logo {
   padding: 24px 20px 20px;
@@ -44,8 +45,8 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .nav-item.active { background: rgba(245,200,66,0.12); color: var(--gold); }
 .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
 
-/* Main */
-.main-content { margin-left: 240px; flex: 1; padding: 32px; }
+/* Main Content Area */
+.main-content { margin-left: 240px; flex: 1; padding: 32px; min-width: 0; }
 .page-header { margin-bottom: 28px; }
 .page-title { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--navy); letter-spacing: 1px; }
 .page-sub { font-size: 14px; color: var(--text2); margin-top: 4px; }
@@ -67,7 +68,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 }
 .stat-num { font-size: 32px; font-weight: 700; color: var(--navy); }
 .stat-label { font-size: 12px; color: var(--text3); margin-top: 4px; font-weight: 500; }
-.stat-trend { font-size: 11px; margin-top: 6px; }
 
 /* Table */
 .data-table { width: 100%; border-collapse: collapse; }
@@ -80,27 +80,16 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .data-table tr:last-child td { border-bottom: none; }
 .data-table tr:hover td { background: rgba(245,200,66,0.04); }
 
-/* Badges */
-.badge {
-  display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px;
-  border-radius: 20px; letter-spacing: 0.3px;
-}
-.badge-green { background: #D4EDDA; color: #1A5C30; }
-.badge-amber { background: #FFF3CD; color: #856404; }
-.badge-red { background: #FDDEDE; color: #8B1A1A; }
-.badge-blue { background: #D0E8FF; color: #0A4A8C; }
-.badge-gray { background: var(--cream2); color: var(--text3); }
-
 /* Forms */
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .form-row.single { grid-template-columns: 1fr; }
-.form-group label { font-size: 12px; font-weight: 700; color: var(--text2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-.form-group input, .form-group select, .form-group textarea {
+.form-group label, .field label { font-size: 12px; font-weight: 700; color: var(--text2); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-group input, .form-group select, .form-group textarea, .field input, .field select {
   width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
   border-radius: var(--radius-sm); font-size: 14px; font-family: 'DM Sans', sans-serif;
   color: var(--navy); background: white; outline: none; transition: border 0.15s;
 }
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--navy); }
+.form-group input:focus, .form-group select:focus, .field input:focus, .field select:focus { border-color: var(--navy); }
 
 /* Buttons */
 .btn {
@@ -118,10 +107,9 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .score-box {
   width: 40px; height: 36px; border: 1.5px solid var(--border); border-radius: 6px;
   text-align: center; font-size: 16px; font-weight: 700; color: var(--navy);
-  font-family: 'DM Sans', sans-serif; outline: none; -moz-appearance: textfield;
+  font-family: 'DM Sans', sans-serif; outline: none; -webkit-appearance: none; -moz-appearance: textfield;
 }
 .score-box::-webkit-inner-spin-button, .score-box::-webkit-outer-spin-button { -webkit-appearance: none; }
-.score-box:focus { border-color: var(--navy); }
 
 /* Upload area */
 .upload-area {
@@ -132,28 +120,22 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 .upload-area img { max-width: 100%; border-radius: var(--radius-sm); max-height: 120px; object-fit: cover; }
 
 /* Login overlay */
-.admin-login {
-  position: fixed; inset: 0; background: var(--navy);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 999;
-}
-.admin-login-box {
-  background: var(--navy2); border-radius: var(--radius); padding: 32px;
-  width: 360px; border: 1px solid rgba(255,255,255,0.08);
-}
+.admin-login { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.admin-login-box { background: var(--navy2); border-radius: var(--radius); padding: 32px; width: 360px; border: 1px solid rgba(255,255,255,0.08); }
 .admin-login-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); margin-bottom: 24px; }
 .admin-login-input {
   width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
   border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.07);
-  color: white; font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none;
-  margin-bottom: 12px;
+  color: white; font-size: 15px; font-family: 'DM Sans', sans-serif; outline: none; margin-bottom: 12px;
 }
 .admin-login-input::placeholder { color: rgba(255,255,255,0.3); }
-.admin-login-btn {
-  width: 100%; padding: 13px; border: none; border-radius: var(--radius-sm);
-  background: var(--gold); color: var(--navy); font-size: 15px; font-weight: 700;
-  cursor: pointer; font-family: 'DM Sans', sans-serif;
-}
+.admin-login-btn { width: 100%; padding: 13px; border: none; border-radius: var(--radius-sm); background: var(--gold); color: var(--navy); font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+/* Badges */
+.badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.3px; }
+.badge-green { background: #D4EDDA; color: #1A5C30; }
+.badge-amber { background: #FFF3CD; color: #856404; }
+.badge-gray { background: var(--cream2); color: var(--text3); }
 
 /* Toast */
 .toast-admin {
@@ -164,7 +146,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 }
 .toast-admin.show { opacity: 1; }
 
-/* Responsive tabs */
+/* Tabs */
 .section-tabs { display: flex; gap: 4px; margin-bottom: 20px; flex-wrap: wrap; }
 .section-tab {
   padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
@@ -179,7 +161,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 </head>
 <body>
 
-<!-- LOGIN ADMIN -->
 <div class="admin-login" id="admin-login">
   <div class="admin-login-box">
     <div class="admin-login-title">🏆 Admin Panel</div>
@@ -191,7 +172,6 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
 <div class="admin-layout" id="admin-app" style="display:none;">
 
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-title">Prode Mundial</div>
@@ -200,48 +180,42 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
     </div>
     <nav class="sidebar-nav">
       <div class="sidebar-section">General</div>
-      <button class="nav-item active" onclick="showPanel('dashboard')">
+      <button class="nav-item active" id="nav-dashboard" onclick="showPanel('dashboard')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Dashboard
       </button>
       <div class="sidebar-section">Partidos</div>
-      <button class="nav-item" onclick="showPanel('resultados')">
+      <button class="nav-item" id="nav-resultados" onclick="showPanel('resultados')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
         Cargar resultados
       </button>
-      <button class="nav-item" onclick="showPanel('partidos')">
+      <button class="nav-item" id="nav-partidos" onclick="showPanel('partidos')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         Gestionar partidos
       </button>
       <div class="sidebar-section">Usuarios</div>
-      <button class="nav-item" onclick="showPanel('usuarios')">
+      <button class="nav-item" id="nav-usuarios" onclick="showPanel('usuarios')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
         Usuarios
       </button>
-      <button class="nav-item" onclick="showPanel('grupos')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        Grupos
-      </button>
       <div class="sidebar-section">Apariencia</div>
-      <button class="nav-item" onclick="showPanel('banners')">
+      <button class="nav-item" id="nav-banners" onclick="showPanel('banners')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         Banners e imágenes
       </button>
-      <button class="nav-item" onclick="showPanel('config')">
+      <button class="nav-item" id="nav-config" onclick="showPanel('config')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
         Configuración
       </button>
     </nav>
   </div>
 
-  <!-- MAIN -->
   <main class="main-content">
 
-    <!-- DASHBOARD -->
     <div class="panel active" id="panel-dashboard">
       <div class="page-header">
         <div class="page-title">Dashboard</div>
-        <div class="page-sub">Resumen general del prode · actualizado hace 2 min</div>
+        <div class="page-sub">Resumen general del prode · en tiempo real</div>
       </div>
       <div class="stats-grid" id="stats-grid">
         <div class="stat-card"><div class="stat-num" id="stat-usuarios">—</div><div class="stat-label">Usuarios</div></div>
@@ -251,133 +225,150 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
       </div>
 
       <div class="card">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-          Próximos partidos (próximas 48h)
-        </div>
+        <div class="card-title">Próximos partidos (próximas 48h)</div>
         <div id="proximos-partidos-list">Cargando...</div>
       </div>
 
       <div class="card">
-        <div class="card-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-          Últimos usuarios registrados
-        </div>
+        <div class="card-title">Últimos usuarios registrados</div>
         <div id="ultimos-usuarios">Cargando...</div>
       </div>
     </div>
 
-    <!-- RESULTADOS -->
     <div class="panel" id="panel-resultados">
       <div class="page-header">
         <div class="page-title">Cargar Resultados</div>
-        <div class="page-sub">Ingresá el marcador final de cada partido. Los puntos se calculan automáticamente.</div>
+        <div class="page-sub">Ingresá el marcador final. Los puntos se reliquidan al instante.</div>
       </div>
-
       <div class="section-tabs" id="etapa-tabs-admin"></div>
       <div id="resultados-partidos-list"></div>
     </div>
 
-    <!-- PARTIDOS -->
     <div class="panel" id="panel-partidos">
       <div class="page-header">
         <div class="page-title">Gestionar Partidos</div>
-        <div class="page-sub">Actualizá equipos para etapas eliminatorias cuando se definan los clasificados.</div>
+        <div class="page-sub">Actualizá llaves o agregá cruces de eliminación directa.</div>
+      </div>
+
+      <div class="card" style="background:#1B2D42; color:white; border:none;">
+        <div class="card-title" style="color:var(--gold);">🏆 Configurar Llaves (Octavos, Cuartos, Semis, Final)</div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label style="color:rgba(255,255,255,0.6);">Fase de Llave</label>
+            <select id="admin-fase-select" style="background:#0D1B2A; color:white; border-color:rgba(255,255,255,0.1);">
+              <option value="octavos">Octavos de Final</option>
+              <option value="cuartos">Cuartos de Final</option>
+              <option value="semifinal">Semifinales</option>
+              <option value="tercero">3er Puesto</option>
+              <option value="final">Final</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="color:rgba(255,255,255,0.6);">Grupo o Identificador (Opcional)</label>
+            <input type="text" id="admin-fase-grupo" placeholder="Ej: Octavo 1, Llave A" style="background:#0D1B2A; color:white; border-color:rgba(255,255,255,0.1);">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label style="color:rgba(255,255,255,0.6);">Selección Local (Nombre)</label>
+            <input type="text" id="admin-local-nombre" placeholder="Ej: Argentina" oninput="previsualizarBandera('local')" style="background:#0D1B2A; color:white; border-color:rgba(255,255,255,0.1);">
+            <div id="previa-bandera-local" style="font-size: 26px; margin-top: 6px; text-align: center;">🏳️</div>
+          </div>
+          <div class="form-group">
+            <label style="color:rgba(255,255,255,0.6);">Selección Visitante (Nombre)</label>
+            <input type="text" id="admin-visit-nombre" placeholder="Ej: Brasil" oninput="previsualizarBandera('visit')" style="background:#0D1B2A; color:white; border-color:rgba(255,255,255,0.1);">
+            <div id="previa-bandera-visit" style="font-size: 26px; margin-top: 6px; text-align: center;">🏳️</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label style="color:rgba(255,255,255,0.6);">Fecha de Partido</label>
+            <input type="date" id="admin-fase-fecha" style="background:#0D1B2A; color:white; border-color:rgba(255,255,255,0.1);">
+          </div>
+          <div class="form-group">
+            <label style="color:rgba(255,255,255,0.6);">Hora de Partido</label>
+            <input type="time" id="admin-fase-hora" style="background:#0D1B2A; color:white; border-color:rgba(255,255,255,0.1);">
+          </div>
+        </div>
+
+        <button onclick="guardarPartidoEliminatoria()" id="btn-crear-partido" class="btn btn-gold" style="width:100%; margin-top:8px; padding:12px; font-weight:700;">➕ Crear Partido Oficial</button>
       </div>
 
       <div class="card">
-        <div class="card-title">Partidos eliminatorios — actualizar equipos</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Los partidos de octavos, cuartos, semis y final se actualizan aquí cuando se conocen los clasificados.</p>
-        <div id="partidos-elim-list">
-          <p style="color:var(--text3);font-size:14px;">Seleccioná la etapa para editar.</p>
-        </div>
-        <div style="margin-top:16px;">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Partido</label>
-              <select id="edit-partido-select" onchange="loadPartidoEdit()"></select>
-            </div>
+        <div class="card-title">Partidos eliminatorios cargados — Editar Equipos</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Seleccioná el Partido</label>
+            <select id="edit-partido-select" onchange="loadPartidoEdit()"></select>
           </div>
-          <div class="form-row" id="edit-partido-form" style="display:none;">
-            <div class="form-group">
-              <label>Equipo local (bandera + nombre)</label>
-              <input type="text" id="edit-local-bandera" placeholder="🇦🇷" style="width:60px;display:inline-block;margin-right:8px;">
-              <input type="text" id="edit-local-nombre" placeholder="Argentina" style="width:calc(100% - 76px);display:inline-block;">
-            </div>
-            <div class="form-group">
-              <label>Equipo visitante (bandera + nombre)</label>
-              <input type="text" id="edit-visit-bandera" placeholder="🇧🇷" style="width:60px;display:inline-block;margin-right:8px;">
-              <input type="text" id="edit-visit-nombre" placeholder="Brasil" style="width:calc(100% - 76px);display:inline-block;">
-            </div>
-          </div>
-          <button class="btn btn-navy" onclick="guardarPartidoEdit()">Guardar cambios</button>
         </div>
+        <div class="form-row" id="edit-partido-form" style="display:none;">
+          <div class="form-group">
+            <label>Local (Bandera + Nombre)</label>
+            <input type="text" id="edit-local-bandera" placeholder="🇦🇷" style="width:60px;display:inline-block;margin-right:8px;text-align:center;">
+            <input type="text" id="edit-local-nombre" placeholder="Argentina" style="width:calc(100% - 76px);display:inline-block;">
+          </div>
+          <div class="form-group">
+            <label>Visitante (Bandera + Nombre)</label>
+            <input type="text" id="edit-visit-bandera" placeholder="🇧🇷" style="width:60px;display:inline-block;margin-right:8px;text-align:center;">
+            <input type="text" id="edit-visit-nombre" placeholder="Brasil" style="width:calc(100% - 76px);display:inline-block;">
+          </div>
+        </div>
+        <button class="btn btn-navy" style="width:100%; margin-top:8px;" onclick="guardarPartidoEdit()">Guardar cambios en llave</button>
       </div>
     </div>
 
-    <!-- USUARIOS -->
     <div class="panel" id="panel-usuarios">
       <div class="page-header">
-        <div class="page-title">Usuarios</div>
-        <div class="page-sub">Todos los participantes registrados</div>
+        <div class="page-title">Usuarios Registrados</div>
+        <div class="page-sub">Panel de control y auditoría de participantes en el sistema.</div>
       </div>
-      <div class="card">
-        <div class="card-title">Lista de usuarios</div>
-        <table class="data-table" id="usuarios-table">
-          <thead><tr>
-            <th>Avatar</th><th>Nombre</th><th>Grupos</th><th>Pronósticos</th><th>Acciones</th>
-          </tr></thead>
-          <tbody id="usuarios-tbody"></tbody>
-        </table>
+
+      <div class="card" style="background:#0D1B2A; color:white; border:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <div class="card-title" style="color:var(--gold); margin:0;">Lista de Jugadores Activos</div>
+            <p style="font-size:12px; color:rgba(255,255,255,0.5); margin-top:4px;">Total en Base de Datos: <span id="admin-total-usuarios" style="color:white; font-weight:700;">0</span> jugadores</p>
+          </div>
+          <button class="btn" onclick="eliminarTodosLosUsuarios()" style="background:rgba(193,41,46,0.2); border:1px solid rgba(193,41,46,0.4); color:#FF4D4D; font-size:12px; font-weight:700;">🗑️ Eliminar Todos</button>
+        </div>
+        
+        <div id="admin-lista-usuarios" style="max-height: 450px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;">
+          <p style="color:rgba(255,255,255,0.4); text-align:center; padding:20px;">Cargando lista...</p>
+        </div>
       </div>
     </div>
 
-    <!-- GRUPOS -->
-    <div class="panel" id="panel-grupos">
-      <div class="page-header">
-        <div class="page-title">Grupos de juego</div>
-        <div class="page-sub">Administrá los grupos del prode</div>
-      </div>
-      <div id="grupos-admin-list"></div>
-    </div>
-
-    <!-- BANNERS -->
     <div class="panel" id="panel-banners">
       <div class="page-header">
         <div class="page-title">Banners e imágenes</div>
-        <div class="page-sub">Subí banners publicitarios o decorativos que aparecen en la app</div>
+        <div class="page-sub">Subí banners publicitarios o decorativos para la aplicación.</div>
       </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
         <div class="card">
           <div class="card-title">Banner principal (pantalla pronósticos)</div>
-          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Aparece arriba de la lista de partidos. Tamaño ideal: 800×200px</p>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Tamaño ideal: 800×200px</p>
           <div class="upload-area" id="banner-main-preview" onclick="document.getElementById('banner-main-input').click()">
             <div style="font-size:32px;margin-bottom:8px;">🖼</div>
             <p style="font-size:13px;color:var(--text3);">Hacé clic para subir imagen</p>
-            <p style="font-size:11px;color:var(--text3);margin-top:4px;">JPG, PNG · máx 2MB</p>
           </div>
           <input type="file" id="banner-main-input" accept="image/*" style="display:none;" onchange="previewBanner('banner-main', this)">
           <div class="form-group" style="margin-top:12px;">
             <label>O pegá una URL de imagen</label>
             <input type="text" id="banner-main-url" placeholder="https://...">
           </div>
-          <div class="form-group" style="margin-top:8px;">
-            <label>Asignar a grupo (opcional — vacío = todos)</label>
-            <select id="banner-main-grupo">
-              <option value="">Todos los grupos</option>
-            </select>
-          </div>
           <button class="btn btn-navy" style="margin-top:12px;width:100%;" onclick="saveBanner('main')">Guardar banner</button>
         </div>
 
         <div class="card">
           <div class="card-title">Banner secundario (pantalla tabla)</div>
-          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Aparece en la sección de clasificación. Tamaño ideal: 800×120px</p>
+          <p style="font-size:12px;color:var(--text3);margin-bottom:12px;">Tamaño ideal: 800×120px</p>
           <div class="upload-area" id="banner-tabla-preview" onclick="document.getElementById('banner-tabla-input').click()">
             <div style="font-size:32px;margin-bottom:8px;">🖼</div>
             <p style="font-size:13px;color:var(--text3);">Hacé clic para subir imagen</p>
-            <p style="font-size:11px;color:var(--text3);margin-top:4px;">JPG, PNG · máx 2MB</p>
           </div>
           <input type="file" id="banner-tabla-input" accept="image/*" style="display:none;" onchange="previewBanner('banner-tabla', this)">
           <div class="form-group" style="margin-top:12px;">
@@ -390,158 +381,55 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
       <div class="card">
         <div class="card-title">Banners activos</div>
-        <div id="banners-list">
-          <p style="color:var(--text3);font-size:14px;">No hay banners activos.</p>
-        </div>
+        <div id="banners-list"><p style="color:var(--text3);font-size:14px;">No hay banners activos.</p></div>
       </div>
     </div>
 
-    <!-- CONFIG -->
     <div class="panel" id="panel-config">
       <div class="page-header">
-        <div class="page-title">Configuración</div>
-        <div class="page-sub">Ajustes generales del prode</div>
+        <div class="page-title">Configuración del Sistema</div>
+        <div class="page-sub">Ajustes generales de puntajes, contraseñas y formateo.</div>
       </div>
+      
       <div class="card">
-        <div class="card-title">Sistema de puntos</div>
+        <div class="card-title">Sistema de puntos por Etapa</div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Puntos por resultado exacto (fase grupos)</label>
-            <input type="number" id="cfg-exacto" value="3" min="1" max="10">
-          </div>
-          <div class="form-group">
-            <label>Puntos por resultado correcto (fase grupos)</label>
-            <input type="number" id="cfg-resultado" value="1" min="1" max="10">
-          </div>
+          <div class="form-group"><label>Pleno / Exacto</label><input type="number" id="cfg-exacto" value="3"></div>
+          <div class="form-group"><label>Resultado correcto</label><input type="number" id="cfg-resultado" value="1"></div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Multiplicador octavos</label>
-            <input type="number" id="cfg-mult-oct" value="2" min="1" max="5">
-          </div>
-          <div class="form-group">
-            <label>Multiplicador cuartos</label>
-            <input type="number" id="cfg-mult-qrt" value="2" min="1" max="5">
-          </div>
+          <div class="form-group"><label>Multiplicador Octavos</label><input type="number" id="cfg-mult-oct" value="2"></div>
+          <div class="form-group"><label>Multiplicador Cuartos</label><input type="number" id="cfg-mult-qrt" value="2"></div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Multiplicador semifinal</label>
-            <input type="number" id="cfg-mult-semi" value="3" min="1" max="5">
-          </div>
-          <div class="form-group">
-            <label>Multiplicador final</label>
-            <input type="number" id="cfg-mult-final" value="4" min="1" max="10">
-          </div>
+          <div class="form-group"><label>Multiplicador Semis</label><input type="number" id="cfg-mult-semi" value="3"></div>
+          <div class="form-group"><label>Multiplicador Final</label><input type="number" id="cfg-mult-final" value="4"></div>
         </div>
-        <button class="btn btn-navy" onclick="saveConfig()">Guardar configuración</button>
+        <button class="btn btn-navy" onclick="saveConfig()" style="width:100%;">Guardar matriz de puntos</button>
       </div>
 
-      <div class="card">
-        <div class="card-title">Contraseña de admin</div>
-        <div class="form-row single">
-          <div class="form-group">
-            <label>Nueva contraseña</label>
-            <input type="password" id="new-admin-pwd" placeholder="Mínimo 6 caracteres">
-          </div>
-        </div>
-        <button class="btn btn-navy" onclick="changeAdminPwd()">Cambiar contraseña</button>
-      </div>
-
-      <div class="card" style="border-color:rgba(193,41,46,0.2);">
-        <div class="card-title">Zona peligrosa</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">Estas acciones no se pueden deshacer.</p>
-        <div style="display:flex;gap:12px;">
-          <button class="btn btn-danger" onclick="if(confirm('¿Resetear TODOS los pronósticos?')) resetPronos()">Resetear pronósticos</button>
-          <button class="btn btn-outline" onclick="if(confirm('¿Resetear TODOS los resultados?')) resetResultados()">Resetear resultados</button>
-        </div>
+      <div class="card" style="border: 1.5px solid #C1292E; background: #FFF0F0;">
+        <div class="card-title" style="color:var(--red); font-weight:700;">🚨 Zona de Peligro / Reset de Fábrica</div>
+        <p style="font-size: 12px; color: var(--text2); margin-bottom: 16px; line-height: 1.5;">
+          Al presionar el botón se eliminarán de manera irreversible todos los grupos, jugadores, apuestas registradas y resultados cargados en Supabase.
+        </p>
+        <button id="btn-reset-sistema" onclick="ejecutarResetSistema()" class="btn btn-danger" style="width:100%; padding:12px; font-weight:700;">
+          💥 Resetear Base de Datos Completa
+        </button>
       </div>
     </div>
 
   </main>
 </div>
-<div style="margin: 24px 16px; padding: 20px; background: #FFF0F0; border: 1.5px solid rgba(193,41,46,0.2); border-radius: var(--radius); text-align: center;">
-  <h3 style="font-size: 14px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Zona de Peligro</h3>
-  <p style="font-size: 12px; color: var(--text2); margin-bottom: 16px; line-height: 1.5;">Borra de forma permanente todos los grupos creados, los miembros sumados, los pronósticos guardados y los resultados. <br><strong>¡Esta acción no se puede deshacer!</strong></p>
-  
-  <button id="btn-reset-sistema" onclick="ejecutarResetSistema()" style="width: 100%; max-width: 280px; padding: 12px; background: #C1292E; color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; box-shadow: 0 4px 10px rgba(193,41,46,0.2);">
-    💥 Resetear Todo el Sistema
-  </button>
-</div>
+
 <div class="toast-admin" id="toast-admin"></div>
-<div style="margin: 24px 16px; padding: 20px; background: var(--navy); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); color: white;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
-    <div>
-      <h3 style="font-size: 16px; font-weight: 700; color: var(--gold); text-transform: uppercase; margin: 0;">Usuarios Registrados</h3>
-      <p style="font-size: 11px; color: rgba(255,255,255,0.6); margin: 4px 0 0 0;">Total: <span id="admin-total-usuarios" style="font-weight: 700; color: white;">0</span> jugadores</p>
-    </div>
-    <button onclick="eliminarTodosLosUsuarios()" style="padding: 8px 12px; background: rgba(193,41,46,0.2); color: #FF4D4D; border: 1px solid rgba(193,41,46,0.4); border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;">
-      🗑️ Eliminar Todos
-    </button>
-  </div>
-
-  <div id="admin-lista-usuarios" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
-    <p style="font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; padding: 20px;">Cargando jugadores...</p>
-  </div>
-</div>
-
-<div style="margin: 24px 16px; padding: 20px; background: var(--navy); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); color: white;">
-  <h3 style="font-size: 16px; font-weight: 700; color: var(--gold); text-transform: uppercase; margin-bottom: 16px;">Configurar Eliminatorias</h3>
-  
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-    <div class="field">
-      <label>Fase</label>
-      <select id="admin-fase-select" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; outline: none;">
-        <option value="octavos">Octavos de Final</option>
-        <option value="cuartos">Cuartos de Final</option>
-        <option value="semifinal">Semifinales</option>
-        <option value="tercero">3er Puesto</option>
-        <option value="final">Final</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Grupo (Opcional)</label>
-      <input type="text" id="admin-fase-grupo" placeholder="Ej: Octavo 1" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
-    </div>
-  </div>
-
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-    <div class="field">
-      <label>Local (Nombre)</label>
-      <input type="text" id="admin-local-nombre" placeholder="Ej: Argentina" oninput="previsualizarBandera('local')" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
-      <div id="previa-bandera-local" style="font-size: 24px; margin-top: 5px; text-align: center;">🏳️</div>
-    </div>
-    <div class="field">
-      <label>Visitante (Nombre)</label>
-      <input type="text" id="admin-visit-nombre" placeholder="Ej: Brasil" oninput="previsualizarBandera('visit')" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
-      <div id="previa-bandera-visit" style="font-size: 24px; margin-top: 5px; text-align: center;">🏳️</div>
-    </div>
-  </div>
-
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-    <div class="field">
-      <label>Fecha</label>
-      <input type="date" id="admin-fase-fecha" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
-    </div>
-    <div class="field">
-      <label>Hora</label>
-      <input type="time" id="admin-fase-hora" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
-    </div>
-  </div>
-
-  <button onclick="guardarPartidoEliminatoria()" id="btn-crear-partido" class="btn-primary">
-    ➕ Crear Partido
-  </button>
-</div>
 
 <script>
 console.log("SCRIPT INICIO");
 const SUPABASE_URL = window.ENV.SUPABASE_URL;
 const SUPABASE_KEY = window.ENV.SUPABASE_KEY;
-
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Guardamos los partidos que bajemos de la Base de Datos para usarlos como referencia global
 let partidosDeBaseDeDatos = []; 
 let currentEtapa = 'grupos';
 
@@ -552,35 +440,57 @@ window.addEventListener('load', () => {
     initAdminPanel();
   }
 });
-// 1. Cargar y renderizar el listado de usuarios de Supabase
+
+async function initAdminPanel() {
+  await cargarPartidosDeSupabase(); 
+  loadDashboard();
+  buildEtapaTabsAdmin();
+  loadResultadosPartidos('grupos');
+  populatePartidoSelect();
+  cargarUsuariosAdmin();
+}
+
+// Ruteador oficial de la barra lateral (Sidebar)
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  const targetPanel = document.getElementById('panel-'+id);
+  if (targetPanel) targetPanel.classList.add('active');
+  
+  const currentNav = document.getElementById('nav-'+id);
+  if (currentNav) currentNav.classList.add('active');
+  
+  if (id==='dashboard') loadDashboard();
+  if (id==='usuarios') cargarUsuariosAdmin();
+  if (id==='banners') loadBannersAdmin();
+}
+
 async function cargarUsuariosAdmin() {
   const contenedor = document.getElementById('admin-lista-usuarios');
   const contador = document.getElementById('admin-total-usuarios');
   if (!contenedor) return;
 
   try {
-    // Traemos todos los usuarios ordenados alfabéticamente
     const { data: usuarios, error } = await sb.from('usuarios').select('*').order('nombre', { ascending: true });
     if (error) throw error;
 
-    contador.textContent = usuarios ? usuarios.length : 0;
+    if (contador) contador.textContent = usuarios ? usuarios.length : 0;
 
     if (!usuarios || usuarios.length === 0) {
       contenedor.innerHTML = `<p style="font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; padding: 20px;">No hay usuarios registrados.</p>`;
       return;
     }
 
-    contenedor.innerHTML = ''; // Limpiamos el "Cargando..."
+    contenedor.innerHTML = '';
 
     usuarios.forEach(u => {
-      // Definimos qué avatar mostrar (Foto o Emoji)
       const avatarHtml = u.foto_url 
         ? `<img src="${u.foto_url}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">`
         : `<span style="font-size:20px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">${u.emoji || '⚽'}</span>`;
 
-      // Creamos la fila del usuario
       const fila = document.createElement('div');
-      fila.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm);";
+      fila.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm); margin-bottom:4px;";
       
       fila.innerHTML = `
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -603,7 +513,6 @@ async function cargarUsuariosAdmin() {
   }
 }
 
-// 1. Diccionario de Banderas (Agrega todas las que quieras)
 const BANDERAS_MAP = {
   "argentina": "🇦🇷", "brasil": "🇧🇷", "uruguay": "🇺🇾", "francia": "🇫🇷",
   "alemania": "🇩🇪", "españa": "🇪🇸", "inglaterra": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "italia": "🇮🇹",
@@ -614,14 +523,12 @@ const BANDERAS_MAP = {
   "belgica": "🇧🇪", "suiza": "🇨🇭", "dinamarca": "🇩🇰", "senegal": "🇸🇳"
 };
 
-// 2. Función para mostrar la bandera mientras escribes
 function previsualizarBandera(tipo) {
   const nombre = document.getElementById(`admin-${tipo}-nombre`).value.trim().toLowerCase();
   const contenedor = document.getElementById(`previa-bandera-${tipo}`);
-  contenedor.textContent = BANDERAS_MAP[nombre] || "🏳️";
+  if (contenedor) contenedor.textContent = BANDERAS_MAP[nombre] || "🏳️";
 }
 
-// 3. Función para guardar el partido en Supabase
 async function guardarPartidoEliminatoria() {
   const fase = document.getElementById('admin-fase-select').value;
   const grupo = document.getElementById('admin-fase-grupo').value.trim();
@@ -650,179 +557,105 @@ async function guardarPartidoEliminatoria() {
       fecha: fecha,
       hora: hora,
       etapa: fase,
-      grupo: grupo || null, // Para que diga "Octavo 1", "Semi 2", etc.
-      mult: fase === 'octavos' || fase === 'cuartos' ? 2 : (fase === 'semifinal' ? 3 : 4) // Multiplicador automático por fase
+      grupo: grupo || null,
+      mult: fase === 'octavos' || fase === 'cuartos' ? 2 : (fase === 'semifinal' ? 3 : 4)
     });
 
     if (error) throw error;
 
     alert(`✅ Partido de ${fase} creado con éxito.`);
-    
-    // Limpiar campos
     document.getElementById('admin-local-nombre').value = "";
     document.getElementById('admin-visit-nombre').value = "";
     previsualizarBandera('local');
     previsualizarBandera('visit');
+    await cargarPartidosDeSupabase();
+    populatePartidoSelect();
 
   } catch (err) {
     console.error(err);
     alert("❌ Error al guardar el partido.");
   } finally {
     btn.disabled = false;
-    btn.textContent = "➕ Crear Partido";
+    btn.textContent = "➕ Crear Partido Oficial";
   }
 }
 
-// 2. Eliminar un usuario de forma individual
 async function eliminarUsuarioIndividual(idUsuario, nombreUsuario) {
   const seguro = confirm(`⚠️ ¿Estás seguro de que querés eliminar a "${nombreUsuario}" del sistema?\nSe borrarán también todas sus apuestas y uniones a grupos.`);
   if (!seguro) return;
 
   try {
-    // Borramos en cascada sus datos asociados en Supabase primero (para evitar bloqueos FK)
     await sb.from('pronosticos').delete().eq('usuario_id', idUsuario);
     await sb.from('grupo_miembros').delete().eq('usuario_id', idUsuario);
-    
-    // Finalmente lo borramos de la tabla principal de usuarios
     const { error } = await sb.from('usuarios').delete().eq('id', idUsuario);
     if (error) throw error;
 
     alert(`✅ Usuario "${nombreUsuario}" eliminado correctamente.`);
-    cargarUsuariosAdmin(); // Recargamos la lista automáticamente
-
+    cargarUsuariosAdmin();
   } catch (err) {
     console.error(err);
     alert("❌ Error al intentar eliminar el usuario.");
   }
 }
 
-// 3. Eliminar masivamente a todos los usuarios
 async function eliminarTodosLosUsuarios() {
-  const seguro = confirm("🚨 ATENCIÓN: Estás por eliminar a TODOS los usuarios del sistema de forma masiva.\nEsta acción vaciará la lista por completo. ¿Querés continuar?");
+  const seguro = confirm("🚨 ATENCIÓN: Estás por eliminar a TODOS los usuarios del sistema.\n¿Querés continuar?");
   if (!seguro) return;
 
-  const ultraSeguro = confirm("🔥 ¿DE VERDAD SEGURO? No va a quedar nadie registrado y vas a tener que avisarles que se vuelvan a crear la cuenta.");
+  const ultraSeguro = confirm("🔥 ¿DE VERDAD SEGURO? Se borrará todo el padrón.");
   if (!ultraSeguro) return;
 
   try {
-    // Limpieza total en orden de dependencias
     await sb.from('pronosticos').delete().neq('usuario_id', 'vacio');
     await sb.from('grupo_miembros').delete().neq('usuario_id', 'vacio');
-    
-    // Vaciamos la tabla usuarios (excepto si tenés un Admin fijo, sino vuela todo)
-    const { error } = await sb.from('usuarios').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    const { error } = await sb.from('usuarios').delete().neq('nombre', 'AdminProde');
     if (error) throw error;
 
-    alert("✅ Todos los usuarios y sus registros fueron eliminados del sistema.");
+    alert("✅ Todos los usuarios fueron eliminados.");
     cargarUsuariosAdmin();
-
   } catch (err) {
     console.error(err);
-    alert("❌ Error en el borrado masivo de usuarios.");
+    alert("❌ Error en el borrado masivo.");
   }
 }
 
-// ══════════════════════════════════════════════
-//  INICIALIZACIÓN DEL PANEL ADMIN
-// ══════════════════════════════════════════════
-// Ejecutamos la carga apenas levanta el script o el panel
-document.addEventListener('DOMContentLoaded', () => {
-  cargarUsuariosAdmin();
-}); 
-
-async function initAdminPanel() {
-  await cargarPartidosDeSupabase(); // Primero bajamos el fixture real de internet
-  loadDashboard();
-  buildEtapaTabsAdmin();
-  loadResultadosPartidos('grupos');
-  populatePartidoSelect();
-}
 async function ejecutarResetSistema() {
-  // 1. Primer filtro de seguridad
-  const seguro = confirm("⚠️ ATENCIÓN: Estás por borrar absolutamente TODO el sistema (pronósticos, grupos, miembros y resultados). ¿Querés continuar?");
+  const seguro = confirm("⚠️ ATENCIÓN: Estás por borrar absolutamente TODO el sistema. ¿Querés continuar?");
   if (!seguro) return;
 
-  // 2. Segundo filtro de seguridad por si las moscas
-  const ultraSeguro = confirm("🚨 ¿DE VERDAD ESTÁS SEGURO? Se borrarán todos los usuarios y los datos cargados por tus amigos. No hay marcha atrás.");
+  const ultraSeguro = confirm("🚨 ¿DE VERDAD ESTÁS SEGURO? No hay marcha atrás.");
   if (!ultraSeguro) return;
 
   const btn = document.getElementById('btn-reset-sistema');
   if (btn) { btn.disabled = true; btn.textContent = 'Borrando base de datos...'; }
 
   try {
-    // Borramos en cascada respetando dependencias de Supabase:
-    
-    // A. Limpiamos las apuestas de la gente
-    const { error: errP } = await sb.from('pronosticos').delete().neq('partido_id', 'vacio');
-    if (errP) console.warn("Aviso en pronósticos:", errP.message);
+    await sb.from('pronosticos').delete().neq('partido_id', 'vacio');
+    await sb.from('resultados').delete().neq('partido_id', 'vacio');
+    await sb.from('grupo_miembros').delete().neq('grupo_id', '00000000-0000-0000-0000-000000000000');
+    await sb.from('grupos').delete().neq('creado_por', 'vacio');
+    await sb.from('usuarios').delete().neq('nombre', 'AdminProde');
 
-    // B. Limpiamos los resultados oficiales cargados
-    const { error: errR } = await sb.from('resultados').delete().neq('partido_id', 'vacio');
-    if (errR) console.warn("Aviso en resultados:", errR.message);
-
-    // C. Borramos las uniones de los miembros a los grupos
-    const { error: errM } = await sb.from('grupo_miembros').delete().neq('grupo_id', '00000000-0000-0000-0000-000000000000');
-    if (errM) console.warn("Aviso en miembros:", errM.message);
-
-    // D. Borramos los grupos creados
-    const { error: errG } = await sb.from('grupos').delete().neq('creado_por', 'vacio');
-    if (errG) console.warn("Aviso en grupos:", errG.message);
-
-    // E. Opcional: Borramos los perfiles creados por los usuarios (dejamos la tabla limpia)
-    const { error: errU } = await sb.from('usuarios').delete().neq('nombre', 'AdminProde');
-    if (errU) console.warn("Aviso en usuarios:", errU.message);
-
-    alert("✅ Base de datos reseteada con éxito. El sistema quedó en 0 listo para arrancar.");
-    location.reload(); // Recargamos el panel para limpiar las visuales
-
+    alert("✅ Base de datos reseteada con éxito.");
+    location.reload();
   } catch (err) {
     console.error(err);
     alert("❌ Hubo un error al intentar vaciar la base de datos.");
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '💥 Resetear Todo el Sistema'; }
+    if (btn) { btn.disabled = false; btn.textContent = '💥 Resetear Base de Datos Completa'; }
   }
 }
 
-// Función clave para sincronizar los partidos reales y sus etapas/multiplicadores
 async function cargarPartidosDeSupabase() {
   const { data, error } = await sb.from('partidos').select('*');
-  if (!error && data) {
-    partidosDeBaseDeDatos = data;
-  }
-}
-
-function logoutAdmin() {
-  sessionStorage.removeItem('admin_ok');
-  location.reload();
-}
-
-const ETAPAS = [
-  { id:'grupos', label:'Fase de Grupos' }, { id:'octavos', label:'Octavos' },
-  { id:'cuartos', label:'Cuartos' }, { id:'semifinal', label:'Semifinal' },
-  { id:'tercero', label:'3er Puesto' }, { id:'final', label:'Final' },
-];
-
-function toast(msg, ms=2500) {
-  const t = document.getElementById('toast-admin');
-  if (t) {
-    t.textContent = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), ms);
-  }
+  if (!error && data) partidosDeBaseDeDatos = data;
 }
 
 async function doAdminLogin() {
   const pwd = document.getElementById('admin-pwd').value;
+  const { data, error } = await sb.from('admin_config').select('admin_password').eq('id', 'main').single();
 
-  const { data, error } = await sb
-    .from('admin_config')
-    .select('admin_password')
-    .eq('id', 'main')
-    .single();
-
-  if (error) {
-    toast('Error de autenticación o tabla admin_config inexistente');
-    return;
-  }
+  if (error) { return toast('Error de tabla admin_config'); }
 
   if (pwd === data.admin_password) {
     sessionStorage.setItem('admin_ok', 'true');
@@ -834,22 +667,6 @@ async function doAdminLogin() {
   }
 }
 
-function showPanel(id) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  
-  const targetPanel = document.getElementById('panel-'+id);
-  if (targetPanel) targetPanel.classList.add('active');
-  
-  if (event && event.currentTarget) event.currentTarget.classList.add('active');
-  
-  if (id==='dashboard') loadDashboard();
-  if (id==='usuarios') loadUsuarios();
-  if (id==='grupos') loadGruposAdmin();
-  if (id==='banners') loadBannersAdmin();
-}
-
-// ─── DASHBOARD ───
 async function loadDashboard() {
   const { count: cu } = await sb.from('usuarios').select('*',{count:'exact',head:true});
   const { count: cg } = await sb.from('grupos').select('*',{count:'exact',head:true});
@@ -861,7 +678,6 @@ async function loadDashboard() {
   document.getElementById('stat-pronos').textContent = cp||0;
   document.getElementById('stat-partidos-cargados').textContent = cr||0;
 
-  // Próximos partidos dinámicos desde la Base de Datos
   const now = new Date();
   const proximos = partidosDeBaseDeDatos.filter(p => {
     const [y,m,d] = p.fecha.split('-').map(Number);
@@ -883,7 +699,6 @@ async function loadDashboard() {
     </tbody></table>`;
   }
 
-  // Últimos usuarios
   const { data: users } = await sb.from('usuarios').select('*').order('created_at',{ascending:false}).limit(5);
   const uuList = document.getElementById('ultimos-usuarios');
   if (!users||users.length===0) { uuList.innerHTML='<p style="color:var(--text3);font-size:14px;">Sin usuarios.</p>'; return; }
@@ -899,9 +714,9 @@ function formatFecha(fechaStr, hora) {
   return `${d} ${meses[m-1]} · ${hora}`;
 }
 
-// ─── RESULTADOS ───
 function buildEtapaTabsAdmin() {
   const cont = document.getElementById('etapa-tabs-admin');
+  if (!cont) return;
   cont.innerHTML = '';
   ETAPAS.forEach((e,i) => {
     const btn = document.createElement('button');
@@ -977,99 +792,27 @@ async function guardarResultado(partidoId) {
   const l = document.getElementById('res-l-' + partidoId).value;
   const r = document.getElementById('res-r-' + partidoId).value;
 
-  if (l === '' || r === '') {
-    return toast('Ingresá los dos marcadores');
-  }
+  if (l === '' || r === '') return toast('Ingresá los dos marcadores');
 
   const gLocal = parseInt(l);
   const gVisit = parseInt(r);
 
-  const { error } = await sb
-    .from('resultados')
-    .upsert({
-      partido_id: partidoId,
-      goles_local: gLocal,
-      goles_visit: gVisit
-    }, {
-      onConflict: 'partido_id'
-    });
+  const { error } = await sb.from('resultados').upsert({ partido_id: partidoId, goles_local: gLocal, goles_visit: gVisit }, { onConflict: 'partido_id' });
 
-  if (error) {
-    console.error(error);
-    return toast('Error guardando resultado');
-  }
+  if (error) { console.error(error); return toast('Error guardando resultado'); }
 
-  // Recalcular puntos en vivo
   await recalcPuntos(partidoId);
-
   toast('✅ Resultado guardado y puntos actualizados');
   loadResultadosPartidos(currentEtapa);
 }
 
-// ─── USUARIOS ───
-async function loadUsuarios() {
-  const { data: users } = await sb.from('usuarios').select('*').order('created_at',{ascending:false});
-  const tbody = document.getElementById('usuarios-tbody');
-  if (!users||users.length===0) { tbody.innerHTML='<tr><td colspan="5" style="color:var(--text3)">Sin usuarios</td></tr>'; return; }
-
-  tbody.innerHTML = users.map(u => `<tr>
-    <td>${u.foto_url?`<img src="${u.foto_url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid var(--border);">`: `<span style="font-size:22px;">${u.emoji||'⚽'}</span>`}</td>
-    <td><strong>${u.nombre}</strong></td>
-    <td>—</td>
-    <td>—</td>
-    <td><button class="btn btn-outline" style="font-size:12px;padding:6px 10px;" onclick="banUser('${u.id}','${u.nombre}')">Suspender</button></td>
-  </tr>`).join('');
-}
-
-async function banUser(id, nombre) {
-  if (!confirm(`¿Suspender a ${nombre}?`)) return;
-  await sb.from('usuarios').delete().eq('id', id); // O update si creaste columna suspendido
-  toast('✓ Usuario removido'); loadUsuarios();
-}
-
-// ─── GRUPOS ADMIN ───
-async function loadGruposAdmin() {
-  const { data: grupos } = await sb.from('grupos').select('*').order('created_at',{ascending:false});
-  const cont = document.getElementById('grupos-admin-list');
-  if (!grupos||grupos.length===0) { cont.innerHTML='<div class="card"><p style="color:var(--text3)">Sin grupos</p></div>'; return; }
-  cont.innerHTML = '';
-  for (const g of grupos) {
-    const { count } = await sb.from('grupo_miembros').select('*',{count:'exact',head:true}).eq('grupo_id',g.id);
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.style.marginBottom = '12px';
-    card.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="font-size:28px;">${g.emoji||'🏆'}</div>
-          <div>
-            <div style="font-size:15px;font-weight:700;color:var(--navy);">${g.nombre}</div>
-            <div style="font-size:12px;color:var(--text3);">Código: <strong>${g.codigo}</strong> · ${count} miembros</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;">
-          <button class="btn btn-danger" style="font-size:12px;" onclick="deleteGrupo('${g.id}','${g.nombre}')">Eliminar</button>
-        </div>
-      </div>`;
-    cont.appendChild(card);
-  }
-}
-
-async function deleteGrupo(id, nombre) {
-  if (!confirm(`¿Eliminar el grupo "${nombre}"? Esto desvinculará a los miembros.`)) return;
-  await sb.from('grupo_miembros').delete().eq('grupo_id',id);
-  await sb.from('grupos').delete().eq('id',id);
-  toast('Grupo eliminado'); loadGruposAdmin();
-}
-
-// ─── BANNERS ───
 function previewBanner(prefix, input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     const area = document.getElementById(prefix+'-preview');
-    area.innerHTML = `<img src="${ev.target.result}" alt="Preview">`;
+    if (area) area.innerHTML = `<img src="${ev.target.result}" alt="Preview">`;
   };
   reader.readAsDataURL(file);
 }
@@ -1098,6 +841,7 @@ async function saveBanner(type) {
 async function loadBannersAdmin() {
   const { data: banners } = await sb.from('banners').select('*');
   const cont = document.getElementById('banners-list');
+  if (!cont) return;
   if (!banners||banners.length===0) { cont.innerHTML = '<p style="color:var(--text3)">Sin banners.</p>'; return; }
   cont.innerHTML = banners.map(b=>`
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
@@ -1112,9 +856,9 @@ async function deleteBanner(id) {
   toast('Banner eliminado'); loadBannersAdmin();
 }
 
-// ─── PARTIDOS EDIT ───
 async function populatePartidoSelect() {
   const sel = document.getElementById('edit-partido-select');
+  if (!sel) return;
   if (partidosDeBaseDeDatos.length === 0) await cargarPartidosDeSupabase();
   const elim = partidosDeBaseDeDatos.filter(p=>p.etapa!=='grupos');
   sel.innerHTML = '<option value="">— Seleccioná un partido —</option>' +
@@ -1124,10 +868,10 @@ async function populatePartidoSelect() {
 function loadPartidoEdit() {
   const pid = document.getElementById('edit-partido-select').value;
   const form = document.getElementById('edit-partido-form');
-  if (!pid) { form.style.display='none'; return; }
+  if (!pid) { if (form) form.style.display='none'; return; }
   const p = partidosDeBaseDeDatos.find(pt=>pt.id == pid);
   if (!p) return;
-  form.style.display='grid';
+  if (form) form.style.display='grid';
   document.getElementById('edit-local-bandera').value = p.local;
   document.getElementById('edit-local-nombre').value = p.local_nombre;
   document.getElementById('edit-visit-bandera').value = p.visit;
@@ -1142,17 +886,13 @@ async function guardarPartidoEdit() {
   const visit = document.getElementById('edit-visit-bandera').value;
   const visitNombre = document.getElementById('edit-visit-nombre').value;
 
-  // Actualizamos el partido directo en la tabla partidos principal de Supabase
-  await sb.from('partidos').update({ 
-    local, local_nombre: localNombre, visit, visit_nombre: visitNombre 
-  }).eq('id', pid);
+  await sb.from('partidos').update({ local, local_nombre: localNombre, visit, visit_nombre: visitNombre }).eq('id', pid);
 
   toast('✅ Partido actualizado. Sincronizado con los usuarios.');
   await cargarPartidosDeSupabase();
   populatePartidoSelect();
 }
 
-// ─── CONFIG ───
 function saveConfig() {
   const cfg = {
     exacto: document.getElementById('cfg-exacto').value,
@@ -1166,60 +906,26 @@ function saveConfig() {
   toast('✅ Configuración local guardada');
 }
 
-async function changeAdminPwd() {
-  const pwd = document.getElementById('new-admin-pwd').value;
-  if (pwd.length < 4) return toast('La contraseña debe tener al menos 4 caracteres');
-  
-  // Guardamos en Supabase para que cambie de verdad el inicio de sesión
-  const { error } = await sb.from('admin_config').update({ admin_password: pwd }).eq('id', 'main');
-  if (error) return toast('Error al actualizar contraseña en base de datos');
-  
-  toast('✅ Contraseña de Base de Datos actualizada');
-  document.getElementById('new-admin-pwd').value = '';
-}
-
-async function resetPronos() {
-  await sb.from('pronosticos').delete().neq('usuario_id','00000000-0000-0000-0000-000000000000');
-  toast('✅ Pronósticos reseteados');
-}
-async function resetResultados() {
-  await sb.from('resultados').delete().neq('partido_id','__none__');
-  toast('✅ Resultados reseteados');
-  loadResultadosPartidos(currentEtapa);
-}
-
-// ─── RECALCULO DE PUNTOS SEGURO ───
 async function recalcPuntos(partidoId) {
-  const { data: resultado, error } = await sb
-    .from('resultados')
-    .select('*')
-    .eq('partido_id', partidoId)
-    .single();
-
+  const { data: resultado, error } = await sb.from('resultados').select('*').eq('partido_id', partidoId).single();
   if (error || !resultado) return;
 
-  const { data: pronosticos, error: err2 } = await sb
-    .from('pronosticos')
-    .select('*')
-    .eq('partido_id', partidoId);
-
+  const { data: pronosticos, error: err2 } = await sb.from('pronosticos').select('*').eq('partido_id', partidoId);
   if (err2 || !pronosticos) return;
 
   const gLocal = resultado.goles_local;
   const gVisit = resultado.goles_visit;
-
-  // Buscamos el partido en los datos sincronizados de Supabase
   const partidoInfo = partidosDeBaseDeDatos.find(p => p.id == partidoId);
   let mult = 1;
   
   const configLocal = localStorage.getItem('prode_config');
   const cfg = configLocal ? JSON.parse(configLocal) : { exacto: 3, resultado: 1, multOct: 2, multQrt: 2, multSemi: 3, multFinal: 4 };
 
-  if (partInfo = partidoInfo) {
-    if (partInfo.etapa === 'octavos') mult = parseInt(cfg.multOct) || 2;
-    if (partInfo.etapa === 'cuartos') mult = parseInt(cfg.multQrt) || 2;
-    if (partInfo.etapa === 'semifinal') mult = parseInt(cfg.multSemi) || 3;
-    if (partInfo.etapa === 'final') mult = parseInt(cfg.multFinal) || 4;
+  if (partidoInfo) {
+    if (partidoInfo.etapa === 'octavos') mult = parseInt(cfg.multOct) || 2;
+    if (partidoInfo.etapa === 'cuartos') mult = parseInt(cfg.multQrt) || 2;
+    if (partidoInfo.etapa === 'semifinal') mult = parseInt(cfg.multSemi) || 3;
+    if (partidoInfo.etapa === 'final') mult = parseInt(cfg.multFinal) || 4;
   }
 
   const ptsExacto = (parseInt(cfg.exacto) || 3) * mult;
@@ -1227,26 +933,15 @@ async function recalcPuntos(partidoId) {
 
   for (const p of pronosticos) {
     let puntos = 0;
-
     if (p.goles_local === gLocal && p.goles_visit === gVisit) {
       puntos = ptsExacto;
     } else {
       const pronoRes = Math.sign(p.goles_local - p.goles_visit);
       const realRes = Math.sign(gLocal - gVisit);
-      if (pronoRes === realRes) {
-        puntos = ptsResultado;
-      }
+      if (pronoRes === realRes) puntos = ptsResultado;
     }
-
-    // CORRECCIÓN ULTRA CLAVE: Actualiza usando únicamente partido_id y usuario_id.
-    // Quitamos el filtro de grupo_id ya que el pronóstico es global por usuario.
-    await sb
-      .from('pronosticos')
-      .update({ puntos: puntos })
-      .eq('partido_id', partidoId)
-      .eq('usuario_id', p.usuario_id);
+    await sb.from('pronosticos').update({ puntos: puntos }).eq('partido_id', partidoId).eq('usuario_id', p.usuario_id);
   }
-
   console.log('✅ Puntos globales reliquidados con éxito');
 }
 
