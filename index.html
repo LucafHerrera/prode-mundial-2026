@@ -99,34 +99,31 @@ body {
 /* Contenedor principal de la cabecera del login */
 .login-header-wrap {
   display: flex;
-  flex-direction: column; /* Cambiado a columna para apilar logo sobre texto */
-  align-items: center; /* Centrado horizontal */
-  justify-content: center;
+  flex-direction: row; /* Asegura que estén uno al lado del otro */
+  align-items: center; /* Los centra verticalmente entre sí */
+  justify-content: center; /* Centra todo el bloque en la pantalla */
   width: 100%;
-  max-width: 360px;
+  max-width: 380px;
   margin-bottom: 24px;
-  gap: 16px; /* Espacio entre logo y texto */
+  gap: 12px; /* <-- Controlá el espacio exacto entre el logo y el texto desde acá (más chico = más pegado) */
 }
 
-/* Estilo del logo agrandado y con fondo fusionado */
+/* Estilo para tu nuevo logo */
 .login-avatar-img {
-  width: 160px; /* Más grande (estaba en 110px) */
-  height: 160px;
-  object-fit: cover; /* Ajuste para que ocupe todo el espacio */
-  background-color: var(--navy2); /* Fondo azul oscuro de la app para tapar los cuadraditos */
-  border: 4px solid var(--white); /* Borde blanco un poco más grueso */
-  border-radius: 24px; /* Esquinas más redondeadas */
-  box-shadow: 0 6px 20px rgba(0,0,0,0.4); /* Sombra más pronunciada */
+  width: 90px; /* Tamaño ideal para que conviva al lado del texto sin taparlo */
+  height: 90px;
+  object-fit: contain; /* Evita que el logo se deforme o se corte */
+  filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.25)); /* Sombra suave que se adapta a la silueta del logo */
 }
 
-/* Ajuste del texto para que esté centrado debajo del logo */
+/* Estilo del texto del título pegado al logo */
 .login-logo {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 46px; 
+  font-size: 38px; /* Ajustado para que sintonice con la altura del logo de 90px */
   color: var(--gold);
-  letter-spacing: 2px; 
-  line-height: 1; /* Título alineado al centro */
-  text-align: center; /* Centrado horizontal */
+  letter-spacing: 1px; 
+  line-height: 0.95; /* Hace que las tres líneas de texto estén más juntas entre sí */
+  text-align: left; /* El texto fluye de izquierda a derecha desde el logo */
 }
 .login-sub { 
   color: rgba(255,255,255,0.5); 
@@ -942,7 +939,7 @@ function renderAvatarEl(el, user) {
     el.innerHTML = '';
     el.textContent = user.emoji || '⚽';
   }
-}
+}git
 
 // ══════════════════════════════════════════════
 //  VALIDACIÓN REACTIVA DEL LOGIN
