@@ -854,22 +854,67 @@ async function loadResultadosPartidos(etapa) {
   }
 }
 
+// FUNCIÓN PARA GUARDAR RESULTADOS DE PARTIDOS (CORREGIDA Y CON ALERTAS)
 async function guardarResultado(partidoId) {
-  const l = document.getElementById('res-l-' + partidoId).value;
-  const r = document.getElementById('res-r-' + partidoId).value;
+  console.log("Intentando guardar resultado para el partido ID:", partidoId);
 
-  if (l === '' || r === '') return toast('Ingresá los dos marcadores');
+  // 1. Capturamos los inputs de goles de forma flexible (por ID o por clase/atributo)
+  const inputLocal = document.getElementById(`goles-local-${partidoId}`) || document.querySelector(`[data-partido="${partidoId}"].input-goles-local`);
+  const inputVisit = document.getElementById(`goles-visit-${partidoId}`) || document.querySelector(`[data-partido="${partidoId}"].input-goles-visit`);
 
-  const gLocal = parseInt(l);
-  const gVisit = parseInt(r);
+  if (!inputLocal || !inputVisit) {
+    console.error("No se encontraron los elementos input en el HTML para el partido:", partidoId);
+    return alert("⚠️ Error interno: No se pudieron encontrar las casillas de goles en el HTML. Revisá los IDs de los inputs.");
+  }
 
-  const { error } = await sb.from('resultados').upsert({ partido_id: partidoId, goles_local: gLocal, goles_visit: gVisit }, { onConflict: 'partido_id' });
+  const golesLocalStr = inputLocal.value.trim();
+  const golesVisitStr = inputVisit.value.trim();
 
-  if (error) { console.error(error); return toast('Error guardando resultado'); }
+  if (golesLocalStr === "" || golesVisitStr === "") {
+    return alert("⚠️ Por favor, completá ambos resultados (local y visitante) antes de guardar.");
+  }
 
-  await recalcPuntos(partidoId);
-  toast('✅ Resultado guardado y puntos actualizados');
-  loadResultadosPartidos(currentEtapa);
+  const golesLocal = parseInt(golesLocalStr, 10);
+  const golesVisit = parseInt(golesVisitStr, 10);
+
+  if (isNaN(golesLocal) || isNaN(golesVisit)) {
+    return alert("⚠️ Los goles ingresados deben ser números válidos.");
+  }
+
+  // 2. Buscamos el botón para darle feedback visual al usuario de que está operando
+  const btn = document.getElementById(`btn-guardar-${partidoId}`) || document.querySelector(`button[onclick*="${partidoId}"]`);
+  const textoOriginal = btn ? btn.textContent : "Guardar";
+  if (btn) { btn.disabled = true; btn.textContent = "⏳..."; }
+
+  try {
+    // 3. Impactamos los goles directamente en Supabase
+    const { data, error } = await sb
+      .from('partidos')
+      .update({
+        goles_local: golesLocal,
+        goles_visit: golesVisit,
+        jugado: true // Marcamos como jugado para que el Prode calcule los puntos
+      })
+      .eq('id', partidoId)
+      .select();
+
+    if (error) throw error;
+
+    alert(`⚽ ¡Resultado guardado con éxito! [${golesLocal} - ${golesVisit}]`);
+    
+    // 4. Refrescamos la lista de la solapa actual para verificar que se pintó bien
+    if (typeof currentEtapa !== 'undefined') {
+      loadResultadosPartidos(currentEtapa);
+    } else {
+      loadResultadosPartidos('grupos');
+    }
+
+  } catch (err) {
+    console.error("Error crítico al actualizar resultado en Supabase:", err);
+    alert("❌ No se pudo guardar en la base de datos: " + (err.message || err));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = textoOriginal; }
+  }
 }
 
 function previewBanner(prefix, input) {
