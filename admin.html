@@ -442,12 +442,16 @@ window.addEventListener('load', () => {
 });
 
 async function initAdminPanel() {
-  await cargarPartidosDeSupabase(); 
-  loadDashboard();
-  buildEtapaTabsAdmin();
-  loadResultadosPartidos('grupos');
-  populatePartidoSelect();
-  cargarUsuariosAdmin();
+  console.log("Iniciando carga de datos del panel...");
+  
+  try { await cargarPartidosDeSupabase(); } catch(e) { console.error("Falló cargarPartidosDeSupabase:", e); }
+  try { loadDashboard(); } catch(e) { console.error("Falló loadDashboard:", e); }
+  try { buildEtapaTabsAdmin(); } catch(e) { console.error("Falló buildEtapaTabsAdmin:", e); }
+  try { loadResultadosPartidos('grupos'); } catch(e) { console.error("Falló loadResultadosPartidos:", e); }
+  try { populatePartidoSelect(); } catch(e) { console.error("Falló populatePartidoSelect:", e); }
+  try { cargarUsuariosAdmin(); } catch(e) { console.error("Falló cargarUsuariosAdmin:", e); }
+  
+  console.log("Proceso de inicialización finalizado.");
 }
 
 // Ruteador oficial de la barra lateral (Sidebar)
@@ -689,20 +693,45 @@ async function cargarPartidosDeSupabase() {
 }
 
 async function doAdminLogin() {
-  const pwd = document.getElementById('admin-pwd').value;
-  const { data, error } = await sb.from('admin_config').select('admin_password').eq('id', 'main').single();
+  const pwd = document.getElementById('admin-pwd').value.trim();
 
-  if (error) { return toast('Error de tabla admin_config'); }
+  if (!pwd) {
+    return alert('Por favor, ingresá la contraseña.');
+  }
 
-  if (pwd === data.admin_password) {
-    sessionStorage.setItem('admin_ok', 'true');
-    document.getElementById('admin-login').style.display = 'none';
-    document.getElementById('admin-app').style.display = 'flex';
-    initAdminPanel();
-  } else {
-    toast('❌ Contraseña incorrecta');
+  try {
+    // Vamos a buscar la clave correcta a Supabase
+    const { data, error } = await sb
+      .from('admin_config')
+      .select('admin_password')
+      .eq('id', 'main')
+      .single();
+
+    if (error) {
+      console.error("Error al consultar la tabla admin_config:", error);
+      return alert('❌ Error de conexión: No se pudo verificar la contraseña en Supabase.');
+    }
+
+    if (pwd === data.admin_password) {
+      // 1. Guardamos la sesión en el navegador
+      sessionStorage.setItem('admin_ok', 'true');
+      
+      // 2. Apagamos el cartel de login de inmediato para que entres sí o sí
+      document.getElementById('admin-login').style.display = 'none';
+      document.getElementById('admin-app').style.display = 'flex';
+      
+      // 3. Ejecutamos la carga de datos de forma segura
+      initAdminPanel();
+    } else {
+      alert('❌ Contraseña incorrecta');
+    }
+
+  } catch (err) {
+    console.error("Error crítico en el proceso de Login:", err);
+    alert('❌ Ocurrió un error inesperado al intentar iniciar sesión.');
   }
 }
+
 
 async function loadDashboard() {
   const { count: cu } = await sb.from('usuarios').select('*',{count:'exact',head:true});
