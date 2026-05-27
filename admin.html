@@ -460,8 +460,79 @@ body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(
 
   </main>
 </div>
-
+<div style="margin: 24px 16px; padding: 20px; background: #FFF0F0; border: 1.5px solid rgba(193,41,46,0.2); border-radius: var(--radius); text-align: center;">
+  <h3 style="font-size: 14px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Zona de Peligro</h3>
+  <p style="font-size: 12px; color: var(--text2); margin-bottom: 16px; line-height: 1.5;">Borra de forma permanente todos los grupos creados, los miembros sumados, los pronósticos guardados y los resultados. <br><strong>¡Esta acción no se puede deshacer!</strong></p>
+  
+  <button id="btn-reset-sistema" onclick="ejecutarResetSistema()" style="width: 100%; max-width: 280px; padding: 12px; background: #C1292E; color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; box-shadow: 0 4px 10px rgba(193,41,46,0.2);">
+    💥 Resetear Todo el Sistema
+  </button>
+</div>
 <div class="toast-admin" id="toast-admin"></div>
+<div style="margin: 24px 16px; padding: 20px; background: var(--navy); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); color: white;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+    <div>
+      <h3 style="font-size: 16px; font-weight: 700; color: var(--gold); text-transform: uppercase; margin: 0;">Usuarios Registrados</h3>
+      <p style="font-size: 11px; color: rgba(255,255,255,0.6); margin: 4px 0 0 0;">Total: <span id="admin-total-usuarios" style="font-weight: 700; color: white;">0</span> jugadores</p>
+    </div>
+    <button onclick="eliminarTodosLosUsuarios()" style="padding: 8px 12px; background: rgba(193,41,46,0.2); color: #FF4D4D; border: 1px solid rgba(193,41,46,0.4); border-radius: var(--radius-sm); font-size: 11px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif;">
+      🗑️ Eliminar Todos
+    </button>
+  </div>
+
+  <div id="admin-lista-usuarios" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+    <p style="font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; padding: 20px;">Cargando jugadores...</p>
+  </div>
+</div>
+
+<div style="margin: 24px 16px; padding: 20px; background: var(--navy); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius); color: white;">
+  <h3 style="font-size: 16px; font-weight: 700; color: var(--gold); text-transform: uppercase; margin-bottom: 16px;">Configurar Eliminatorias</h3>
+  
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+    <div class="field">
+      <label>Fase</label>
+      <select id="admin-fase-select" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; outline: none;">
+        <option value="octavos">Octavos de Final</option>
+        <option value="cuartos">Cuartos de Final</option>
+        <option value="semifinal">Semifinales</option>
+        <option value="tercero">3er Puesto</option>
+        <option value="final">Final</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Grupo (Opcional)</label>
+      <input type="text" id="admin-fase-grupo" placeholder="Ej: Octavo 1" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+    <div class="field">
+      <label>Local (Nombre)</label>
+      <input type="text" id="admin-local-nombre" placeholder="Ej: Argentina" oninput="previsualizarBandera('local')" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+      <div id="previa-bandera-local" style="font-size: 24px; margin-top: 5px; text-align: center;">🏳️</div>
+    </div>
+    <div class="field">
+      <label>Visitante (Nombre)</label>
+      <input type="text" id="admin-visit-nombre" placeholder="Ej: Brasil" oninput="previsualizarBandera('visit')" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+      <div id="previa-bandera-visit" style="font-size: 24px; margin-top: 5px; text-align: center;">🏳️</div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+    <div class="field">
+      <label>Fecha</label>
+      <input type="date" id="admin-fase-fecha" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+    </div>
+    <div class="field">
+      <label>Hora</label>
+      <input type="time" id="admin-fase-hora" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+    </div>
+  </div>
+
+  <button onclick="guardarPartidoEliminatoria()" id="btn-crear-partido" class="btn-primary">
+    ➕ Crear Partido
+  </button>
+</div>
 
 <script>
 console.log("SCRIPT INICIO");
@@ -481,6 +552,183 @@ window.addEventListener('load', () => {
     initAdminPanel();
   }
 });
+// 1. Cargar y renderizar el listado de usuarios de Supabase
+async function cargarUsuariosAdmin() {
+  const contenedor = document.getElementById('admin-lista-usuarios');
+  const contador = document.getElementById('admin-total-usuarios');
+  if (!contenedor) return;
+
+  try {
+    // Traemos todos los usuarios ordenados alfabéticamente
+    const { data: usuarios, error } = await sb.from('usuarios').select('*').order('nombre', { ascending: true });
+    if (error) throw error;
+
+    contador.textContent = usuarios ? usuarios.length : 0;
+
+    if (!usuarios || usuarios.length === 0) {
+      contenedor.innerHTML = `<p style="font-size: 12px; color: rgba(255,255,255,0.4); text-align: center; padding: 20px;">No hay usuarios registrados.</p>`;
+      return;
+    }
+
+    contenedor.innerHTML = ''; // Limpiamos el "Cargando..."
+
+    usuarios.forEach(u => {
+      // Definimos qué avatar mostrar (Foto o Emoji)
+      const avatarHtml = u.foto_url 
+        ? `<img src="${u.foto_url}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">`
+        : `<span style="font-size:20px; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">${u.emoji || '⚽'}</span>`;
+
+      // Creamos la fila del usuario
+      const fila = document.createElement('div');
+      fila.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: var(--radius-sm);";
+      
+      fila.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          ${avatarHtml}
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: white;">${u.nombre}</div>
+            <div style="font-size: 10px; color: rgba(255,255,255,0.5);">ID: ${u.id.substring(0,8)}...</div>
+          </div>
+        </div>
+        <button onclick="eliminarUsuarioIndividual('${u.id}', '${u.nombre}')" style="background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; padding: 6px; font-size: 14px; transition: color 0.2s;" onmouseover="this.style.color='#FF4D4D'" onmouseout="this.style.color='rgba(255,255,255,0.4)'" title="Eliminar usuario">
+          🗑️
+        </button>
+      `;
+      contenedor.appendChild(fila);
+    });
+
+  } catch (err) {
+    console.error("Error al cargar usuarios en panel admin:", err.message);
+    contenedor.innerHTML = `<p style="font-size: 12px; color: #FF4D4D; text-align: center; padding: 20px;">❌ Error al cargar usuarios</p>`;
+  }
+}
+
+// 1. Diccionario de Banderas (Agrega todas las que quieras)
+const BANDERAS_MAP = {
+  "argentina": "🇦🇷", "brasil": "🇧🇷", "uruguay": "🇺🇾", "francia": "🇫🇷",
+  "alemania": "🇩🇪", "españa": "🇪🇸", "inglaterra": "🏴󠁧󠁢󠁥󠁮󠁧󠁿", "italia": "🇮🇹",
+  "portugal": "🇵🇹", "holanda": "🇳🇱", "paises bajos": "🇳🇱", "mexico": "🇲🇽",
+  "eeuu": "🇺🇸", "usa": "🇺🇸", "estados unidos": "🇺🇸", "canada": "🇨🇦",
+  "japon": "🇯🇵", "corea del sur": "🇰🇷", "marruecos": "🇲🇦", "croacia": "🇭🇷",
+  "ecuador": "🇪🇨", "colombia": "🇨🇴", "chile": "🇨🇱", "paraguay": "🇵🇾",
+  "belgica": "🇧🇪", "suiza": "🇨🇭", "dinamarca": "🇩🇰", "senegal": "🇸🇳"
+};
+
+// 2. Función para mostrar la bandera mientras escribes
+function previsualizarBandera(tipo) {
+  const nombre = document.getElementById(`admin-${tipo}-nombre`).value.trim().toLowerCase();
+  const contenedor = document.getElementById(`previa-bandera-${tipo}`);
+  contenedor.textContent = BANDERAS_MAP[nombre] || "🏳️";
+}
+
+// 3. Función para guardar el partido en Supabase
+async function guardarPartidoEliminatoria() {
+  const fase = document.getElementById('admin-fase-select').value;
+  const grupo = document.getElementById('admin-fase-grupo').value.trim();
+  const localNombre = document.getElementById('admin-local-nombre').value.trim();
+  const visitNombre = document.getElementById('admin-visit-nombre').value.trim();
+  const fecha = document.getElementById('admin-fase-fecha').value;
+  const hora = document.getElementById('admin-fase-hora').value;
+
+  if (!localNombre || !visitNombre || !fecha || !hora) {
+    return alert("⚠️ Por favor, completa todos los campos.");
+  }
+
+  const bandLocal = BANDERAS_MAP[localNombre.toLowerCase()] || "🏳️";
+  const bandVisit = BANDERAS_MAP[visitNombre.toLowerCase()] || "🏳️";
+
+  const btn = document.getElementById('btn-crear-partido');
+  btn.disabled = true;
+  btn.textContent = "Guardando...";
+
+  try {
+    const { error } = await sb.from('partidos').insert({
+      local: bandLocal,
+      local_nombre: localNombre,
+      visit: bandVisit,
+      visit_nombre: visitNombre,
+      fecha: fecha,
+      hora: hora,
+      etapa: fase,
+      grupo: grupo || null, // Para que diga "Octavo 1", "Semi 2", etc.
+      mult: fase === 'octavos' || fase === 'cuartos' ? 2 : (fase === 'semifinal' ? 3 : 4) // Multiplicador automático por fase
+    });
+
+    if (error) throw error;
+
+    alert(`✅ Partido de ${fase} creado con éxito.`);
+    
+    // Limpiar campos
+    document.getElementById('admin-local-nombre').value = "";
+    document.getElementById('admin-visit-nombre').value = "";
+    previsualizarBandera('local');
+    previsualizarBandera('visit');
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error al guardar el partido.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "➕ Crear Partido";
+  }
+}
+
+// 2. Eliminar un usuario de forma individual
+async function eliminarUsuarioIndividual(idUsuario, nombreUsuario) {
+  const seguro = confirm(`⚠️ ¿Estás seguro de que querés eliminar a "${nombreUsuario}" del sistema?\nSe borrarán también todas sus apuestas y uniones a grupos.`);
+  if (!seguro) return;
+
+  try {
+    // Borramos en cascada sus datos asociados en Supabase primero (para evitar bloqueos FK)
+    await sb.from('pronosticos').delete().eq('usuario_id', idUsuario);
+    await sb.from('grupo_miembros').delete().eq('usuario_id', idUsuario);
+    
+    // Finalmente lo borramos de la tabla principal de usuarios
+    const { error } = await sb.from('usuarios').delete().eq('id', idUsuario);
+    if (error) throw error;
+
+    alert(`✅ Usuario "${nombreUsuario}" eliminado correctamente.`);
+    cargarUsuariosAdmin(); // Recargamos la lista automáticamente
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error al intentar eliminar el usuario.");
+  }
+}
+
+// 3. Eliminar masivamente a todos los usuarios
+async function eliminarTodosLosUsuarios() {
+  const seguro = confirm("🚨 ATENCIÓN: Estás por eliminar a TODOS los usuarios del sistema de forma masiva.\nEsta acción vaciará la lista por completo. ¿Querés continuar?");
+  if (!seguro) return;
+
+  const ultraSeguro = confirm("🔥 ¿DE VERDAD SEGURO? No va a quedar nadie registrado y vas a tener que avisarles que se vuelvan a crear la cuenta.");
+  if (!ultraSeguro) return;
+
+  try {
+    // Limpieza total en orden de dependencias
+    await sb.from('pronosticos').delete().neq('usuario_id', 'vacio');
+    await sb.from('grupo_miembros').delete().neq('usuario_id', 'vacio');
+    
+    // Vaciamos la tabla usuarios (excepto si tenés un Admin fijo, sino vuela todo)
+    const { error } = await sb.from('usuarios').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (error) throw error;
+
+    alert("✅ Todos los usuarios y sus registros fueron eliminados del sistema.");
+    cargarUsuariosAdmin();
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Error en el borrado masivo de usuarios.");
+  }
+}
+
+// ══════════════════════════════════════════════
+//  INICIALIZACIÓN DEL PANEL ADMIN
+// ══════════════════════════════════════════════
+// Ejecutamos la carga apenas levanta el script o el panel
+document.addEventListener('DOMContentLoaded', () => {
+  cargarUsuariosAdmin();
+}); 
 
 async function initAdminPanel() {
   await cargarPartidosDeSupabase(); // Primero bajamos el fixture real de internet
@@ -488,6 +736,51 @@ async function initAdminPanel() {
   buildEtapaTabsAdmin();
   loadResultadosPartidos('grupos');
   populatePartidoSelect();
+}
+async function ejecutarResetSistema() {
+  // 1. Primer filtro de seguridad
+  const seguro = confirm("⚠️ ATENCIÓN: Estás por borrar absolutamente TODO el sistema (pronósticos, grupos, miembros y resultados). ¿Querés continuar?");
+  if (!seguro) return;
+
+  // 2. Segundo filtro de seguridad por si las moscas
+  const ultraSeguro = confirm("🚨 ¿DE VERDAD ESTÁS SEGURO? Se borrarán todos los usuarios y los datos cargados por tus amigos. No hay marcha atrás.");
+  if (!ultraSeguro) return;
+
+  const btn = document.getElementById('btn-reset-sistema');
+  if (btn) { btn.disabled = true; btn.textContent = 'Borrando base de datos...'; }
+
+  try {
+    // Borramos en cascada respetando dependencias de Supabase:
+    
+    // A. Limpiamos las apuestas de la gente
+    const { error: errP } = await sb.from('pronosticos').delete().neq('partido_id', 'vacio');
+    if (errP) console.warn("Aviso en pronósticos:", errP.message);
+
+    // B. Limpiamos los resultados oficiales cargados
+    const { error: errR } = await sb.from('resultados').delete().neq('partido_id', 'vacio');
+    if (errR) console.warn("Aviso en resultados:", errR.message);
+
+    // C. Borramos las uniones de los miembros a los grupos
+    const { error: errM } = await sb.from('grupo_miembros').delete().neq('grupo_id', '00000000-0000-0000-0000-000000000000');
+    if (errM) console.warn("Aviso en miembros:", errM.message);
+
+    // D. Borramos los grupos creados
+    const { error: errG } = await sb.from('grupos').delete().neq('creado_por', 'vacio');
+    if (errG) console.warn("Aviso en grupos:", errG.message);
+
+    // E. Opcional: Borramos los perfiles creados por los usuarios (dejamos la tabla limpia)
+    const { error: errU } = await sb.from('usuarios').delete().neq('nombre', 'AdminProde');
+    if (errU) console.warn("Aviso en usuarios:", errU.message);
+
+    alert("✅ Base de datos reseteada con éxito. El sistema quedó en 0 listo para arrancar.");
+    location.reload(); // Recargamos el panel para limpiar las visuales
+
+  } catch (err) {
+    console.error(err);
+    alert("❌ Hubo un error al intentar vaciar la base de datos.");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '💥 Resetear Todo el Sistema'; }
+  }
 }
 
 // Función clave para sincronizar los partidos reales y sus etapas/multiplicadores
