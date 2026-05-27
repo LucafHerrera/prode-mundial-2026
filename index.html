@@ -101,29 +101,35 @@ body {
   display: flex;
   flex-direction: row; /* Asegura que estén uno al lado del otro */
   align-items: center; /* Los centra verticalmente entre sí */
-  justify-content: center; /* Centra todo el bloque en la pantalla */
+  justify-content: center; /* Centra todo el bloque compacto en la pantalla */
   width: 100%;
   max-width: 380px;
   margin-bottom: 24px;
-  gap: 12px; /* <-- Controlá el espacio exacto entre el logo y el texto desde acá (más chico = más pegado) */
+  gap: 14px; /* Un pelín más de espacio para balancear el nuevo tamaño */
 }
 
-/* Estilo para tu nuevo logo */
+/* Estilo para tu nuevo logo AGRANDADO y FUSIONADO */
 .login-avatar-img {
-  width: 90px; /* Tamaño ideal para que conviva al lado del texto sin taparlo */
-  height: 90px;
-  object-fit: contain; /* Evita que el logo se deforme o se corte */
-  filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.25)); /* Sombra suave que se adapta a la silueta del logo */
+  width: 115px; /* Más grande para balancear la letra (estaba en 90px) */
+  height: 115px;
+  object-fit: contain; /* Evita que el logo se deforme */
+  
+  /* Truco de diseño: Fondo azul de la app para tapar cuadraditos */
+  background-color: var(--navy2); 
+  border: 3.5px solid var(--white); /* Borde blanco prolijo que enmarca a Messi */
+  border-radius: 20px; /* Esquinas redondeadas como en el boceto */
+  
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3); /* Sombra suave para dar profundidad */
 }
 
-/* Estilo del texto del título pegado al logo */
+/* Estilo del texto del título (se mantiene ok, solo ajustamos line-height) */
 .login-logo {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 38px; /* Ajustado para que sintonice con la altura del logo de 90px */
+  font-size: 38px; 
   color: var(--gold);
   letter-spacing: 1px; 
-  line-height: 0.95; /* Hace que las tres líneas de texto estén más juntas entre sí */
-  text-align: left; /* El texto fluye de izquierda a derecha desde el logo */
+  line-height: 1; /* Ajustado para que las 3 líneas se vean compactas al lado del logo más grande */
+  text-align: left;
 }
 .login-sub { 
   color: rgba(255,255,255,0.5); 
