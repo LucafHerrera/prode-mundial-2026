@@ -478,7 +478,7 @@ html, body, .screen, .scroll-area { scrollbar-width: none; }
         <input type="file" id="photo-input" accept="image/*" style="display: none;">
       </div>
 
-      <button class="btn-primary" id="btn-ingresar" onclick="doLogin()" disabled>Ingresar →</button>
+      <button class="btn-primary" id="btn-ingresar" onclick="doLogin()">Ingresar →</button>
     </div>
   </div>
 
@@ -950,34 +950,38 @@ function renderAvatarEl(el, user) {
 // ══════════════════════════════════════════════
 //  VALIDACIÓN REACTIVA DEL LOGIN
 // ══════════════════════════════════════════════
-function validarFormularioLogin() {
-  const nombreInput = document.getElementById('login-nombre');
-  const passwordInput = document.getElementById('login-password');
-  const nombre = nombreInput ? nombreInput.value.trim() : '';
-  const password = passwordInput ? passwordInput.value.trim() : '';
-  const formularioValido = (nombre.length >= 2 && password.length >= 4);
-  const btn = document.getElementById('btn-ingresar');
-  if (btn) btn.disabled = !formularioValido;
-}
 
-document.addEventListener('input', (e) => {
-  if (e.target.id === 'login-nombre' || e.target.id === 'login-password') validarFormularioLogin();
-});
+
+
 
 // ══════════════════════════════════════════════
 //  LOGIN CON STORAGE DE FOTO Y SEGURIDAD
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+//  LOGIN CORREGIDO Y SEGURO (CON PELOTA POR DEFAULT)
+// ══════════════════════════════════════════════
 async function doLogin() {
-  const nombre = document.getElementById('login-nombre').value.trim();
-  const password = document.getElementById('login-password')?.value.trim();
+  const nombreInput = document.getElementById('login-nombre');
+  const passwordInput = document.getElementById('login-password');
+  
+  const nombre = nombreInput ? nombreInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
 
-  if (nombre.length < 2 || !password || password.length < 4) return;
+  // Filtro manual de seguridad al hacer clic
+  if (nombre.length < 2) {
+    return toast('⚠️ El nombre debe tener al menos 2 caracteres');
+  }
+  if (!password || password.length < 4) {
+    return toast('⚠️ La contraseña debe tener al menos 4 caracteres');
+  }
 
   const btn = document.getElementById('btn-ingresar');
   if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
 
   try {
-    let { data: existing } = await sb.from('usuarios').select('*').eq('nombre', nombre).maybeSingle();
+    let { data: existing, error: selectErr } = await sb.from('usuarios').select('*').eq('nombre', nombre).maybeSingle();
+    if (selectErr) throw selectErr;
+    
     let finalUser = null;
 
     if (existing) {
@@ -988,6 +992,7 @@ async function doLogin() {
       }
       finalUser = existing;
     } else {
+      // SI ES UN REGISTRO NUEVO
       let foto_url = null;
       let emoji = null;
 
@@ -1007,6 +1012,7 @@ async function doLogin() {
         const { data: publicData } = sb.storage.from('prode').getPublicUrl(filename);
         foto_url = publicData.publicUrl;
       } else {
+        // Si no seleccionó nada, selectedEmoji ya tiene '⚽' clavado por estado global nativo
         emoji = selectedEmoji;
       }
 
@@ -1019,19 +1025,11 @@ async function doLogin() {
     currentUser = finalUser;
     localStorage.setItem('prode_user_id', currentUser.id);
     afterLogin();
+    
   } catch(err) {
     toast(err.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Ingresar →'; }
-    validarFormularioLogin(); 
   }
-}
-
-async function tryAutoLogin() {
-  const uid = localStorage.getItem('prode_user_id');
-  if (!uid) return false;
-  const { data } = await sb.from('usuarios').select('*').eq('id', uid).single();
-  if (data) { currentUser = data; afterLogin(); return true; }
-  return false;
 }
 
 function afterLogin() {
