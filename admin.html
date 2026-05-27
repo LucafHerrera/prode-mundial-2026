@@ -451,6 +451,7 @@ async function initAdminPanel() {
 }
 
 // Ruteador oficial de la barra lateral (Sidebar)
+// Ruteador oficial corregido para activar la carga de partidos en vivo
 function showPanel(id) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -461,9 +462,37 @@ function showPanel(id) {
   const currentNav = document.getElementById('nav-'+id);
   if (currentNav) currentNav.classList.add('active');
   
-  if (id==='dashboard') loadDashboard();
-  if (id==='usuarios') cargarUsuariosAdmin();
-  if (id==='banners') loadBannersAdmin();
+  // DESENCADENADORES EN VIVO: Cargan los datos al cambiar de pestaña
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'resultados') {
+    currentEtapa = 'grupos'; // Resetea a la primera solapa siempre
+    buildEtapaTabsAdmin();   // Dibuja los botones de Fase de Grupos, Octavos, etc.
+    loadResultadosPartidos('grupos'); // Trae los partidos regulares de Supabase
+  }
+  if (id === 'partidos') populatePartidoSelect();
+  if (id === 'usuarios') cargarUsuariosAdmin();
+  if (id === 'banners') loadBannersAdmin();
+}// Ruteador oficial corregido para activar la carga de partidos en vivo
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  const targetPanel = document.getElementById('panel-'+id);
+  if (targetPanel) targetPanel.classList.add('active');
+  
+  const currentNav = document.getElementById('nav-'+id);
+  if (currentNav) currentNav.classList.add('active');
+  
+  // DESENCADENADORES EN VIVO: Cargan los datos al cambiar de pestaña
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'resultados') {
+    currentEtapa = 'grupos'; // Resetea a la primera solapa siempre
+    buildEtapaTabsAdmin();   // Dibuja los botones de Fase de Grupos, Octavos, etc.
+    loadResultadosPartidos('grupos'); // Trae los partidos regulares de Supabase
+  }
+  if (id === 'partidos') populatePartidoSelect();
+  if (id === 'usuarios') cargarUsuariosAdmin();
+  if (id === 'banners') loadBannersAdmin();
 }
 
 async function cargarUsuariosAdmin() {
@@ -538,7 +567,7 @@ async function guardarPartidoEliminatoria() {
   const hora = document.getElementById('admin-fase-hora').value;
 
   if (!localNombre || !visitNombre || !fecha || !hora) {
-    return alert("⚠️ Por favor, completa todos los campos.");
+    return alert("⚠️ Por favor, completa todos los campos de fecha, hora y equipos.");
   }
 
   const bandLocal = BANDERAS_MAP[localNombre.toLowerCase()] || "🏳️";
@@ -546,10 +575,14 @@ async function guardarPartidoEliminatoria() {
 
   const btn = document.getElementById('btn-crear-partido');
   btn.disabled = true;
-  btn.textContent = "Guardando...";
+  btn.textContent = "Guardando en Supabase...";
+
+  // Generamos un ID único numérico para que Supabase no rebote el partido
+  const idUnicoPartido = "elim_" + Date.now();
 
   try {
-    const { error } = await sb.from('partidos').insert({
+    const { data, error } = await sb.from('partidos').insert({
+      id: idUnicoPartido, // Inyectamos el ID manual para evitar conflictos
       local: bandLocal,
       local_nombre: localNombre,
       visit: bandVisit,
@@ -559,21 +592,25 @@ async function guardarPartidoEliminatoria() {
       etapa: fase,
       grupo: grupo || null,
       mult: fase === 'octavos' || fase === 'cuartos' ? 2 : (fase === 'semifinal' ? 3 : 4)
-    });
+    }).select();
 
     if (error) throw error;
 
-    alert(`✅ Partido de ${fase} creado con éxito.`);
+    alert(`成功: ¡Partido de ${fase.toUpperCase()} creado con éxito!`);
+    
+    // Limpiamos los inputs para el próximo partido
     document.getElementById('admin-local-nombre').value = "";
     document.getElementById('admin-visit-nombre').value = "";
     previsualizarBandera('local');
     previsualizarBandera('visit');
+    
+    // Sincronizamos las listas globales
     await cargarPartidosDeSupabase();
     populatePartidoSelect();
 
   } catch (err) {
-    console.error(err);
-    alert("❌ Error al guardar el partido.");
+    console.error("Error detallado de Supabase:", err);
+    alert("❌ Error al guardar en Supabase. Si el error persiste, revisá que la columna 'etapa' de tu tabla acepte el texto: " + fase);
   } finally {
     btn.disabled = false;
     btn.textContent = "➕ Crear Partido Oficial";
